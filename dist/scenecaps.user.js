@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.1
+// @version     0.0.2
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -81,18 +81,22 @@
     let btnGrp = ".ml-auto .btn-group";
     let wrapper = ".VideoPlayer .video-wrapper";
     waitForElm(wrapper).then(async ($el) => {
-      if (!document.querySelector("#screencaps")) {
-        const [_, scene_id] = getScenarioAndID();
-        const spriteUrl = await getUrlSprite(scene_id);
-        if (spriteUrl) {
+      const [_, scene_id] = getScenarioAndID();
+      const spriteUrl = await getUrlSprite(scene_id);
+      if (spriteUrl) {
+        if (!document.querySelector("#screencaps")) {
           const screenCaps = document.createElement("div");
           const link = document.createElement("a");
           screenCaps.setAttribute("id", "screencaps");
           screenCaps.setAttribute(
             "style",
-            "display: none; position: absolute; top: 10px; left: 10px; bottom: 10px; right: 10px; background: url(" +
-              spriteUrl +
-              "); background-position: center; z-index: 1"
+            `
+            background: url(${spriteUrl}) no-repeat center center/contain;
+            display: block;
+            position: absolute;
+            inset: 10px;
+            z-index: 1;
+            `
           );
           link.setAttribute("href", spriteUrl);
           link.setAttribute("target", "_screencap");
@@ -121,6 +125,20 @@
               });
             }
           });
+        } else {
+          const screenCaps = document.querySelector("#screencaps");
+          const link = screenCaps.querySelector("a");
+          screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
+          link.href = spriteUrl;
+        }
+      } else {
+        const screenCaps = document.querySelector("#screencaps");
+        const btn = document.querySelector("#scenecaps");
+        if (screenCaps) {
+          screenCaps.remove();
+        }
+        if (btn) {
+          btn.remove();
         }
       }
     });
