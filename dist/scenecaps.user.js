@@ -96,6 +96,7 @@
             position: absolute;
             inset: 10px;
             z-index: 1;
+            display: none;
             `
           );
           link.setAttribute("href", spriteUrl);
