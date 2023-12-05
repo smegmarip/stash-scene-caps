@@ -77,6 +77,24 @@
   }
 
   const { stash } = unsafeWindow.stash;
+
+  function onKeyPressSave() {
+    let btnGrp = "#scene-edit-details .edit-buttons";
+    waitForElm(btnGrp).then(async ($el) => {
+      const $btn = $el.querySelector(".btn-primary");
+      if ($btn) {
+        document.addEventListener("keydown", function (event) {
+          // Check if 'S' is pressed along with Ctrl or Cmd
+          if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+            event.preventDefault(); // Prevent the default save action
+            // Trigger your specific button event
+            $btn.click();
+          }
+        });
+      }
+    });
+  }
+
   stash.addEventListener("page:scene", function () {
     let btnGrp = ".ml-auto .btn-group";
     let wrapper = ".VideoPlayer .video-wrapper";
@@ -144,4 +162,7 @@
       }
     });
   });
+
+  stash.addEventListener("page:scene", onKeyPressSave);
+  stash.addEventListener("page:image", onKeyPressSave);
 })();
