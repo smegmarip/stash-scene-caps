@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.2
+// @version     0.0.3
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
