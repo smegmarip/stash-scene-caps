@@ -56,7 +56,7 @@
                         <div class="mb-2 mr-2 d-flex">
                           <div class="flex-grow-1 query-text-field-group">
                               <input id="stashtag-search" placeholder="Search…" class="query-text-field bg-secondary text-white border-secondary form-control">
-                              <button title="Clear" type="button" class="query-text-field-clear btn btn-secondary">
+                              <button title="Clear" type="button" class="query-text-field-clear btn btn-secondary d-none">
                                 <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="xmark" class="svg-inline--fa fa-xmark fa-icon " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                                     <path fill="currentColor" d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"></path>
                                 </svg>
@@ -473,6 +473,13 @@
     $(".tagger-tabs").remove();
   }
 
+  function onClearQuery(e) {
+    e.preventDefault();
+    $(e.currentTarget).addClass("d-none");
+    $("#stashtag-search").val("");
+    $("#stashtag-search").focus();
+  }
+
   function displayModal(frame) {
     const offset = ((o) => {
         const { left, top, width, height } = o;
@@ -495,6 +502,8 @@
       close_modal();
     });
 
+    $(".stashtag-search .query-text-field-clear").click(onClearQuery);
+
     $("#stashtag-results").on("click", ".tag-card a", function (e) {
       const tag_id = $(e.currentTarget).closest(".tag-card").data("tag_id");
       addMarker(tag_id, frame.time);
@@ -508,10 +517,11 @@
 
       $("#stashtag-search").on("input", function () {
         const searchVal = $(this).val().toLowerCase(),
+          $clearBtn = $(".stashtag-search .query-text-field-clear"),
           filteredTags = tags.filter(function (tag) {
             return tag.name.toLowerCase().includes(searchVal);
           });
-
+        $clearBtn.toggleClass("d-none", !searchVal);
         updateSearch(filteredTags.slice(0, 6));
       });
     });
