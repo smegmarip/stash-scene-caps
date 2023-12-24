@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.9
+// @version     0.1.0
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -68,7 +68,7 @@
                   </div>
                 </div>
                 <div class="modal-body">
-                    <div id="stashtag-results" class="row justify-content-center" style="zoom: 0.8">
+                    <div id="stashtag-results" class="row justify-content-center" style="zoom: 0.5">
           `,
           bottom: `
                 </div>
@@ -544,7 +544,7 @@
     });
 
     getLatestTags().then((tags) => {
-      updateSearch(tags.slice(0, 6));
+      updateSearch(tags.slice(0, 12));
 
       $("#stashtag-search").on("input", function () {
         const searchVal = $(this).val().toLowerCase(),
@@ -553,7 +553,7 @@
             return tag.name.toLowerCase().includes(searchVal);
           });
         $clearBtn.toggleClass("d-none", !searchVal);
-        updateSearch(filteredTags.slice(0, 6));
+        updateSearch(filteredTags.slice(0, 12));
       });
     });
   }
