@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.5
+// @version     0.0.6
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -18,6 +18,7 @@
 (function () {
   "use strict";
 
+  let onSpriteHandler;
   const { stash: stash$1 } = unsafeWindow.stash;
 
   const ui = {
@@ -33,7 +34,7 @@
             <div class="card-section">
               <a class="tag-title" style="cursor: pointer">
                   <h5 class="card-section-title flex-aligned">
-                    <div class="TruncatedText" style="-webkit-line-clamp: 2;">[tag_name]</div>
+                    <div class="TruncatedText center-text text-capitalize" style="-webkit-line-clamp: 2;">[tag_name]</div>
                   </h5>
               </a>
             </div>
@@ -264,21 +265,25 @@
     return getAllTags("id").then(async (tags) => {
       const reqData = {
         query: `mutation {
-            querySQL(sql: "SELECT * FROM scenes_tags", args: []) {
+            querySQL(sql: "SELECT id, primary_tag_id FROM scene_markers ORDER BY created_at DESC", args: []) {
               rows
             }
           }`,
       };
-      var result = await stash$1.callGQL(reqData);
-      return result.data.querySQL.rows
-        .reverse()
-        .reduce((map, arr) => {
+      var result = await stash$1.callGQL(reqData),
+        marker_tag_ids = result.data.querySQL.rows.reduce((map, arr) => {
           if (!map.includes(arr[1])) {
             map.push(arr[1]);
           }
           return map;
-        }, [])
-        .map((tag_id) => tags[tag_id]);
+        }, []);
+      return marker_tag_ids
+        .map((tag_id) => tags[tag_id])
+        .concat(
+          Object.keys(tags)
+            .filter((tag_id) => !marker_tag_ids.includes(tag_id))
+            .map((tag_id) => tags[tag_id])
+        );
     });
   }
 
@@ -529,7 +534,7 @@
 
     $("#stashtag-results").on("click", ".tag-card a", function (e) {
       const tag_id = $(e.currentTarget).closest(".tag-card").data("tag_id");
-      addMarker(tag_id, frame.time);
+      addMarker(tag_id, frame.time).then(() => annotateSprite(frame.spriteUrl));
       addTags([tag_id]);
       alert("marker added");
       close_modal();
@@ -580,6 +585,7 @@
         marker,
         f,
         off;
+      link.innerHTML = "";
       bgImageSize(screenCaps, spriteUrl, (spritePos) => {
         const frameData = getVTTFrames(vtt, spritePos.scale);
         for (marker of sceneMarkers) {
@@ -631,13 +637,7 @@
             display: none;
             `
           );
-          // link.setAttribute("href", spriteUrl);
-          // link.setAttribute("target", "_screencap");
-          link.setAttribute(
-            "style",
-            "display: block; background:transparent; position: absolute; top: 0px; left: 0px; bottom: 0px; right: 0px; cursor: pointer; z-index: 3;"
-          );
-          link.addEventListener("click", function (e) {
+          onSpriteHandler = function (e) {
             const mouseCoords = { x: e.offsetX, y: e.offsetY };
             bgImageSize(screenCaps, spriteUrl, (spritePos) => {
               getSelectedFrame(spriteUrl, spritePos, mouseCoords).then(
@@ -646,7 +646,14 @@
                 }
               );
             });
-          });
+          };
+          // link.setAttribute("href", spriteUrl);
+          // link.setAttribute("target", "_screencap");
+          link.setAttribute(
+            "style",
+            "display: block; background:transparent; position: absolute; top: 0px; left: 0px; bottom: 0px; right: 0px; cursor: pointer; z-index: 3;"
+          );
+          link.addEventListener("click", onSpriteHandler);
           screenCaps.appendChild(link);
           $el.prepend(screenCaps);
           waitForElm(btnGrp).then(async ($btnGrpEl) => {
@@ -675,12 +682,26 @@
           const screenCaps = document.querySelector("#screencaps");
           const link = screenCaps.querySelector("a");
           screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
-          link.href = spriteUrl;
+          link.innerHTML = "";
+          link.removeEventListener("click", onSpriteHandler);
+          onSpriteHandler = function (e) {
+            const mouseCoords = { x: e.offsetX, y: e.offsetY };
+            bgImageSize(screenCaps, spriteUrl, (spritePos) => {
+              getSelectedFrame(spriteUrl, spritePos, mouseCoords).then(
+                (frame) => {
+                  displayModal(frame);
+                }
+              );
+            });
+          };
+          link.addEventListener("click", onSpriteHandler);
         }
       } else {
         const screenCaps = document.querySelector("#screencaps");
         const btn = document.querySelector("#scenecaps");
         if (screenCaps) {
+          const link = screenCaps.querySelector("a");
+          link.removeEventListener("click", onSpriteHandler);
           screenCaps.remove();
         }
         if (btn) {
