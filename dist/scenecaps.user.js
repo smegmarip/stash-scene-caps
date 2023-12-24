@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.0
+// @version     0.1.1
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -28,7 +28,7 @@
           <div draggable="false" class="tag-card zoom-0 grid-card card">
             <div class="thumbnail-section">
               <a class="tag-card-header" style="cursor: pointer">
-                <img class="tag-card-image" alt="tag name" src="http://stash.tropicalnet.local/tag/[tag_id]/image?t=[timestamp]&amp;default=true">
+                <img class="tag-card-image" alt="tag name" src="http://stash.tropicalnet.local/tag/[tag_id]/image?t=[timestamp]">
               </a>
             </div>
             <div class="card-section">
