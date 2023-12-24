@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.8
+// @version     0.0.9
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -617,7 +617,7 @@
 
   const { stash } = unsafeWindow.stash;
 
-  stash.addEventListener("page:scene", function () {
+  function init() {
     let btnGrp = ".ml-auto .btn-group";
     let wrapper = ".VideoPlayer .video-wrapper";
     waitForElm(wrapper).then(async ($el) => {
@@ -712,8 +712,13 @@
         }
       }
     });
-  });
+  }
 
+  stash.addEventListener("page:scene", init);
   stash.addEventListener("page:scene", onKeyPressSave);
   stash.addEventListener("page:image", onKeyPressSave);
+
+  $(function () {
+    $(window).resize(init);
+  });
 })();
