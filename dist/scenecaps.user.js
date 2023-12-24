@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.6
+// @version     0.0.7
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -272,18 +272,20 @@
       };
       var result = await stash$1.callGQL(reqData),
         marker_tag_ids = result.data.querySQL.rows.reduce((map, arr) => {
-          if (!map.includes(arr[1])) {
+          if (map.indexOf(arr[1]) === -1) {
             map.push(arr[1]);
           }
           return map;
         }, []);
       return marker_tag_ids
-        .map((tag_id) => tags[tag_id])
+        .map(Number)
         .concat(
           Object.keys(tags)
-            .filter((tag_id) => !marker_tag_ids.includes(tag_id))
-            .map((tag_id) => tags[tag_id])
-        );
+            .map(Number)
+            .filter((tag_id) => marker_tag_ids.indexOf(tag_id) === -1)
+        )
+        .filter((tag_id, i, self) => i == self.indexOf(tag_id))
+        .map((tag_id) => tags[tag_id]);
     });
   }
 
@@ -506,6 +508,7 @@
     $(e.currentTarget).addClass("d-none");
     $("#stashtag-search").val("");
     $("#stashtag-search").focus();
+    $("#stashtag-search").trigger("input");
   }
 
   function displayModal(frame) {
