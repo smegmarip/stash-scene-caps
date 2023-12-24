@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.1
+// @version     0.1.2
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -201,6 +201,31 @@
     };
     let result = await stash$1.callGQL(reqData);
     return result.data.sceneMarkerCreate.id;
+  }
+
+  async function generateMarkers() {
+    const reqData = {
+      variables: {
+        input: {
+          covers: false,
+          sprites: false,
+          previews: false,
+          imagePreviews: false,
+          markers: true,
+          markerImagePreviews: true,
+          markerScreenshots: true,
+          transcodes: false,
+          phashes: false,
+          interactiveHeatmapsSpeeds: false,
+          clipPreviews: false,
+          overwrite: false,
+        },
+      },
+      query: `mutation MetadataGenerate($input: GenerateMetadataInput!) {
+        metadataGenerate(input: $input)
+      }`,
+    };
+    return stash$1.callGQL(reqData);
   }
 
   async function addMarker(tagId, time) {
@@ -537,8 +562,11 @@
 
     $("#stashtag-results").on("click", ".tag-card a", function (e) {
       const tag_id = $(e.currentTarget).closest(".tag-card").data("tag_id");
-      addMarker(tag_id, frame.time).then(() => annotateSprite(frame.spriteUrl));
       addTags([tag_id]);
+      addMarker(tag_id, frame.time).then(() => {
+        annotateSprite(frame.spriteUrl);
+        generateMarkers();
+      });
       alert("marker added");
       close_modal();
     });
