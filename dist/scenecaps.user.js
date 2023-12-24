@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.0.7
+// @version     0.0.8
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -685,7 +685,6 @@
           const screenCaps = document.querySelector("#screencaps");
           const link = screenCaps.querySelector("a");
           screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
-          link.innerHTML = "";
           link.removeEventListener("click", onSpriteHandler);
           onSpriteHandler = function (e) {
             const mouseCoords = { x: e.offsetX, y: e.offsetY };
@@ -698,6 +697,7 @@
             });
           };
           link.addEventListener("click", onSpriteHandler);
+          annotateSprite(spriteUrl);
         }
       } else {
         const screenCaps = document.querySelector("#screencaps");
