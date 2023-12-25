@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.2
+// @version     0.1.3
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -87,6 +87,13 @@
       icons: {
         clapper: `<svg width="16" height="16" fill="#FFFFFF" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 402.598 402.598" xml:space="preserve"><g id="XMLID_42_"><rect id="XMLID_48_" x="192.93" y="272.598" width="50" height="40"/><path id="XMLID_43_" d="M148.53,182.598l205.016-91.236L312.888,0L29.667,126.039l33.263,74.745v201.813h310v-220H148.53zM136.685,111.25l38.762-17.249l-20.281,52.808l-38.762,17.25L136.685,111.25z M228.046,70.593l38.761-17.25l-20.28,52.808L207.765,123.4L228.046,70.593z M122.93,272.598v-30h190v30h-40v40h40v30h-190v-30h40v-40H122.93z"/></g></svg>`,
         marker: `<svg xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;" height="50%" fill="#FD7E14" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
+      },
+      toast: {
+        top: `<div class="fade toast success show" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header"><span class="mr-auto"></span><button type="button" class="close ml-2 mb-1" data-dismiss="toast"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button></div>
+          <div class="toast-body">`,
+        bottom: `</div>
+        </div>`,
       },
     },
   };
@@ -524,6 +531,18 @@
     return clickFrame;
   }
 
+  function addToast(message) {
+    const templ = ui.templates.toast,
+      top = templ.top,
+      bottom = templ.bottom,
+      $toast = $(`${top}${message}${bottom}`),
+      rmToast = () => $toast.remove();
+
+    $toast.find("button.close").click(rmToast);
+    $(".toast-container").append($toast);
+    setTimeout(rmToast, 3000);
+  }
+
   function close_modal() {
     $(".tagger-tabs").remove();
   }
@@ -541,7 +560,8 @@
         const { left, top, width, height } = o;
         return [left, top, width, height];
       })(frame.unscaled),
-      template = ui.templates.modals.result;
+      template = ui.templates.modals.result,
+      marker_time = formatDuration(frame.time);
     let card = ui.templates.cards.tag,
       html = template.top + template.bottom;
 
@@ -550,7 +570,7 @@
     html = html.replace("[bg_width]", offset[2]);
     html = html.replace("[bg_height]", offset[3]);
     html = html.replace("[sprite_url]", frame.spriteUrl);
-    html = html.replace("[marker_time]", formatDuration(frame.time));
+    html = html.replace("[marker_time]", marker_time);
 
     $(".main > .row").append(html);
 
@@ -561,13 +581,17 @@
     $(".stashtag-search .query-text-field-clear").click(onClearQuery);
 
     $("#stashtag-results").on("click", ".tag-card a", function (e) {
-      const tag_id = $(e.currentTarget).closest(".tag-card").data("tag_id");
+      const tag_id = $(e.currentTarget).closest(".tag-card").data("tag_id"),
+        tag_name = $(e.currentTarget)
+          .closest(".tag-card")
+          .data("tag_name")
+          .replace(/\b\w/g, (a) => a.toUpperCase());
       addTags([tag_id]);
       addMarker(tag_id, frame.time).then(() => {
         annotateSprite(frame.spriteUrl);
         generateMarkers();
       });
-      alert("marker added");
+      addToast(`marker: "${tag_name}" added at ${marker_time}`);
       close_modal();
     });
 
@@ -599,6 +623,7 @@
 
       var $card = $(card);
       $card.data("tag_id", tag.id);
+      $card.data("tag_name", tag.name);
       $results.append($card);
     });
   }
