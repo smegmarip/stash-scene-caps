@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.5
+// @version     0.1.6
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -18,7 +18,6 @@
 (function () {
   "use strict";
 
-  let onSpriteHandler;
   const { stash: stash$1 } = unsafeWindow.stash;
 
   const ui = {
@@ -87,6 +86,8 @@
       icons: {
         clapper: `<svg width="16" height="16" fill="#FFFFFF" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 402.598 402.598" xml:space="preserve"><g id="XMLID_42_"><rect id="XMLID_48_" x="192.93" y="272.598" width="50" height="40"/><path id="XMLID_43_" d="M148.53,182.598l205.016-91.236L312.888,0L29.667,126.039l33.263,74.745v201.813h310v-220H148.53zM136.685,111.25l38.762-17.249l-20.281,52.808l-38.762,17.25L136.685,111.25z M228.046,70.593l38.761-17.25l-20.28,52.808L207.765,123.4L228.046,70.593z M122.93,272.598v-30h190v30h-40v40h40v30h-190v-30h40v-40H122.93z"/></g></svg>`,
         marker: `<svg xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;" height="50%" fill="#FD7E14" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
+        next: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>`,
+        prev: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>`,
       },
       toast: {
         top: `<div class="fade toast success show" role="alert" aria-live="assertive" aria-atomic="true">
@@ -163,6 +164,62 @@
       },
       ".marker_highlight a:hover": {
         opacity: 0.5,
+      },
+      "#queue_navigation": {
+        position: "absolute",
+        "z-index": 5,
+        width: "100%",
+        height: "100%",
+        top: 0,
+        left: 0,
+        display: "flex",
+        "align-items": "center",
+        "pointer-events": "none",
+      },
+      "#queue_navigation > ul": {
+        margin: 0,
+        padding: 0,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        "align-items": "center",
+        "justify-content": "space-between",
+        "list-style": "none",
+      },
+      "#queue_navigation > ul > li": {
+        padding: "15px 5px",
+        margin: 0,
+        display: "flex",
+        "justify-content": "center",
+        position: "relative",
+        "pointer-events": "all",
+        height: "100%",
+        "align-items": "center",
+      },
+      "#queue_navigation > ul > li.prev": {
+        left: "-10px",
+      },
+      "#queue_navigation > ul > li.next": {
+        right: "-10px",
+      },
+      "#queue_navigation > ul > li > a": {
+        background: "rgba(255, 255, 255, 0.25)",
+        transition: "background-color 1s ease, opacity 1s ease",
+        "pointer-events": "none",
+        opacity: 0,
+      },
+      "#queue_navigation > ul > li:hover > a": {
+        "pointer-events": "all",
+        opacity: 1,
+      },
+      "#queue_navigation > ul > li > a:hover": {
+        background: "rgba(255, 255, 255, 0.75)",
+      },
+      "#queue_navigation > ul > li > a > svg": {
+        "font-size": "3em",
+      },
+      "#queue_navigation > ul > li > a:hover > svg": {
+        color: "black",
       },
     },
   };
@@ -593,32 +650,6 @@
     img.src = url;
   }
 
-  async function getSelectedFrame(spriteUrl, spritePos, mouseCoords) {
-    // get vtt blob
-    const vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt");
-    let vtt = await download(vtt_url);
-
-    const frameData = getVTTFrames(vtt, spritePos.scale);
-    const offset = ["x", "y"].reduce((o, k) => {
-      o[k] -= spritePos.position[k];
-      return o;
-    }, mouseCoords);
-    const clickFrame = frameData.reduce((o, f) => {
-      if (offset.x > f.offset.left && offset.x <= f.offset.right) {
-        if (offset.y > f.offset.top && offset.y <= f.offset.bottom) {
-          o = f;
-        }
-      }
-      return o;
-    }, null);
-
-    if (clickFrame) {
-      clickFrame.spriteUrl = spriteUrl;
-    }
-
-    return clickFrame;
-  }
-
   function addToast(message) {
     const templ = ui.templates.toast,
       top = templ.top,
@@ -634,8 +665,6 @@
   function close_modal() {
     $(".tagger-tabs").remove();
   }
-
-  function noop(e = null) {}
 
   function onClearQuery(e) {
     e.preventDefault();
@@ -733,19 +762,59 @@
         f,
         off;
       link.innerHTML = "";
-      bgImageSize(screenCaps, spriteUrl, (spritePos) => {
+      return bgImageSize(screenCaps, spriteUrl, (spritePos) => {
         const frameData = getVTTFrames(vtt, spritePos.scale),
           { x, y } = spritePos.position,
           { width: w, height: h } = spritePos.size,
+          $queue_control = $(".queue-controls"),
+          $queue_content = $("#queue-content"),
           $hl = $(`<ul></ul>`),
           $hlParent = $(
             `<div id="caps-highlight-container" style="left: ${x}px; top: ${y}px; width: ${w}px; height: ${h}px;"></div>`
+          ),
+          $navParent = $(`<div id="queue_navigation"></div>`),
+          $nav = $(`<ul></ul>`),
+          $prev = $(
+            `<li class="prev"><a title="Prev Scene">${ui.templates.icons.prev}</a></li>`
+          ),
+          $next = $(
+            `<li class="next"><a title="Next Scene">${ui.templates.icons.next}</a></li>`
           );
+
+        $prev.click((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const $psvg = $queue_control.find(".btn svg.fa-backward-step"),
+            $usvg = $queue_content.find(".btn-primary svg.fa-chevron-up");
+          if ($psvg.length) {
+            $psvg.closest(".btn").click();
+          } else if ($usvg.length) {
+            $usvg.closest(".btn").click();
+            setTimeout(() => $prev.click(), 2000);
+          }
+        });
+        $next.click((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const $nsvg = $queue_control.find(".btn svg.fa-forward-step"),
+            $dsvg = $queue_content.find(".btn-primary svg.fa-chevron-down");
+          if ($nsvg.length) {
+            $nsvg.closest(".btn").click();
+          } else if ($dsvg.length) {
+            $dsvg.closest(".btn").click();
+            setTimeout(() => $next.click(), 2000);
+          }
+        });
+        $nav.append($prev);
+        $nav.append($next);
+        $navParent.append($nav);
+        link.appendChild($navParent.get(0));
 
         for (f of frameData) {
           $highlight = $(
             `<li class="marker_highlight" style="min-width: ${f.offset.width}px; min-height: ${f.offset.height}px; width: ${f.offset.width}px; height: ${f.offset.height}px;"><a class="frame_hover"></a></li>`
           );
+          $highlight.data("frame", { ...f, spriteUrl });
           $hl.append($highlight);
         }
         $hlParent.append($hl);
@@ -771,8 +840,10 @@
             link.appendChild($markerEl.get(0));
           }
         }
+        return frameData;
       });
     }
+    return new Promise((resolve, reject) => reject(null));
   }
 
   const { stash } = unsafeWindow.stash;
@@ -791,6 +862,7 @@
     waitForElm(wrapper).then(async ($el) => {
       const [_, scene_id] = getScenarioAndID();
       const spriteUrl = await getUrlSprite(scene_id);
+
       if (spriteUrl) {
         if (!document.querySelector("#screencaps")) {
           const screenCaps = document.createElement("div");
@@ -801,30 +873,12 @@
             "style",
             `background: url(${spriteUrl}) no-repeat center center/contain; display: none;`
           );
-          onSpriteHandler = function (e) {
-            const t = e.target,
-              ancestors = [t.offsetParent, t.offsetParent.offsetParent];
-            let mouseCoords;
-
-            if ($(t).is(".frame_hover")) {
-              mouseCoords = {
-                x: e.offsetX + ancestors.reduce((o, p) => o + p.offsetLeft, 0),
-                y: e.offsetY + ancestors.reduce((o, p) => o + p.offsetTop, 0),
-              };
-            } else {
-              mouseCoords = { x: e.offsetX, y: e.offsetY };
-            }
-
-            bgImageSize(screenCaps, spriteUrl, (spritePos) => {
-              getSelectedFrame(spriteUrl, spritePos, mouseCoords).then(
-                (frame) => {
-                  displayModal(frame);
-                }
-              );
-            });
-          };
           link.setAttribute("id", "spritemap");
-          link.addEventListener("click", onSpriteHandler);
+          link.addEventListener("click", function (e) {
+            const t = e.target,
+              frame = $(t).closest(".marker_highlight").data("frame");
+            displayModal(frame);
+          });
           screenCaps.appendChild(link);
           $el.prepend(screenCaps);
           waitForElm(btnGrp).then(async ($btnGrpEl) => {
@@ -851,40 +905,12 @@
           });
         } else {
           const screenCaps = document.querySelector("#screencaps");
-          const link = document.querySelector("#spritemap");
           screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
-          link.removeEventListener("click", onSpriteHandler);
-          onSpriteHandler = function (e) {
-            const t = e.target,
-              ancestors = [t.offsetParent, t.offsetParent.offsetParent];
-            let mouseCoords;
-
-            if ($(t).is(".frame_hover")) {
-              mouseCoords = {
-                x: e.offsetX + ancestors.reduce((o, p) => o + p.offsetLeft, 0),
-                y: e.offsetY + ancestors.reduce((o, p) => o + p.offsetTop, 0),
-              };
-            } else {
-              mouseCoords = { x: e.offsetX, y: e.offsetY };
-            }
-
-            bgImageSize(screenCaps, spriteUrl, (spritePos) => {
-              getSelectedFrame(spriteUrl, spritePos, mouseCoords).then(
-                (frame) => {
-                  displayModal(frame);
-                }
-              );
-            });
-          };
-          link.addEventListener("click", onSpriteHandler);
-          annotateSprite(spriteUrl);
         }
       } else {
         const screenCaps = document.querySelector("#screencaps");
         const btn = document.querySelector("#scenecaps");
         if (screenCaps) {
-          const link = document.querySelector("#spritemap");
-          link.removeEventListener("click", onSpriteHandler);
           screenCaps.remove();
         }
         if (btn) {
