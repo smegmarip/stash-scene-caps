@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.4
+// @version     0.1.5
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -44,7 +44,7 @@
       modals: {
         result: {
           top: `
-          <div class="tagger-tabs" style="position: absolute; flex: 0 0 450px; max-width: 450px; min-width: 450px; height: 100%; overflow: auto; order: -1; background-color: var(--body-color); z-index: 10;">
+          <div class="tagger-tabs">
             <div class="modal-dialog modal-xl top-accent">
               <div class="modal-content">
                 <div class="modal-header" style="padding: 20px;">
@@ -96,6 +96,75 @@
         </div>`,
       },
     },
+    styles: {
+      ".tagger-tabs": {
+        position: "absolute",
+        flex: "0 0 450px",
+        "max-width": "450px",
+        "min-width": "450px",
+        height: "100%",
+        overflow: "auto",
+        order: -1,
+        "background-color": "var(--body-color)",
+        "z-index": 10,
+      },
+      "#screencaps": {
+        display: "block",
+        position: "absolute",
+        inset: "10px",
+        "z-index": 1,
+      },
+      "#spritemap": {
+        display: "block",
+        background: "transparent",
+        position: "absolute",
+        top: "0px",
+        left: "0px",
+        bottom: "0px",
+        right: "0px",
+        cursor: "pointer",
+        "z-index": 4,
+      },
+      ".screen-marker": {
+        display: "flex",
+        "justify-content": "center",
+        "align-items": "center",
+        position: "absolute",
+        "z-index": 3,
+        "pointer-events": "none",
+      },
+      "#caps-highlight-container": {
+        position: "absolute",
+        "z-index": 2,
+      },
+      "#caps-highlight-container > ul": {
+        margin: 0,
+        padding: 0,
+        width: "100%",
+        display: "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "list-style": "none",
+      },
+      ".marker_highlight": {
+        margin: 0,
+        padding: 0,
+        "align-items": "center",
+        display: "flex",
+        "justify-content": "center",
+        position: "relative",
+      },
+      ".marker_highlight a": {
+        width: "100%",
+        height: "100%",
+        background: "white",
+        transition: "opacity 1s ease",
+        opacity: 0,
+      },
+      ".marker_highlight a:hover": {
+        opacity: 0.5,
+      },
+    },
   };
 
   function waitForElm(selector) {
@@ -116,6 +185,18 @@
         subtree: true,
       });
     });
+  }
+
+  function buildStyles(styles) {
+    let cssString = "";
+    for (const selector in styles) {
+      cssString += selector + " { ";
+      for (const property in styles[selector]) {
+        cssString += property + ": " + styles[selector][property] + "; ";
+      }
+      cssString += "} ";
+    }
+    return cssString;
   }
 
   /**
@@ -554,6 +635,8 @@
     $(".tagger-tabs").remove();
   }
 
+  function noop(e = null) {}
+
   function onClearQuery(e) {
     e.preventDefault();
     $(e.currentTarget).addClass("d-none");
@@ -639,18 +722,35 @@
     const [_, scene_id] = getScenarioAndID();
     const sceneMarkers = await getSceneMarkers(scene_id);
     const screenCaps = document.querySelector("#screencaps");
-    const link = screenCaps.querySelector("a");
+    const link = document.querySelector("#spritemap");
     if (sceneMarkers) {
       let icon = ui.templates.icons.marker,
         vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt"),
         vtt = await download(vtt_url),
         $markerEl,
         marker,
+        $highlight,
         f,
         off;
       link.innerHTML = "";
       bgImageSize(screenCaps, spriteUrl, (spritePos) => {
-        const frameData = getVTTFrames(vtt, spritePos.scale);
+        const frameData = getVTTFrames(vtt, spritePos.scale),
+          { x, y } = spritePos.position,
+          { width: w, height: h } = spritePos.size,
+          $hl = $(`<ul></ul>`),
+          $hlParent = $(
+            `<div id="caps-highlight-container" style="left: ${x}px; top: ${y}px; width: ${w}px; height: ${h}px;"></div>`
+          );
+
+        for (f of frameData) {
+          $highlight = $(
+            `<li class="marker_highlight" style="min-width: ${f.offset.width}px; min-height: ${f.offset.height}px; width: ${f.offset.width}px; height: ${f.offset.height}px;"><a class="frame_hover"></a></li>`
+          );
+          $hl.append($highlight);
+        }
+        $hlParent.append($hl);
+        link.appendChild($hlParent.get(0));
+
         for (marker of sceneMarkers) {
           f = frameData.reduce((s, o) => {
             s = Math.abs(marker.seconds - o.time) < 1.0 ? o : s;
@@ -659,14 +759,14 @@
           if (f) {
             off = ["left", "top", "right", "bottom"].reduce((o, k) => {
               if (["left", "right"].includes(k)) {
-                o[k] += spritePos.position.x;
+                o[k] += x;
               } else {
-                o[k] += spritePos.position.y;
+                o[k] += y;
               }
               return o;
             }, f.offset);
             $markerEl = $(
-              `<div class="screen-marker" style="display: flex; justify-content: center; align-items: center; position: absolute; left: ${off.left}px; top: ${off.top}px; width: ${off.width}px; height: ${off.height}px; z-index: 2; pointer-events: none;">${icon}</div>`
+              `<div class="screen-marker" style="left: ${off.left}px; top: ${off.top}px; width: ${off.width}px; height: ${off.height}px;">${icon}</div>`
             );
             link.appendChild($markerEl.get(0));
           }
@@ -680,6 +780,14 @@
   function init() {
     let btnGrp = ".ml-auto .btn-group";
     let wrapper = ".VideoPlayer .video-wrapper";
+
+    $(function () {
+      if (!document.querySelector("#screencaps-styles")) {
+        let css = buildStyles(ui.styles);
+        $('<style id="screencaps-styles"></style>').text(css).appendTo("head");
+      }
+    });
+
     waitForElm(wrapper).then(async ($el) => {
       const [_, scene_id] = getScenarioAndID();
       const spriteUrl = await getUrlSprite(scene_id);
@@ -691,17 +799,22 @@
           screenCaps.setAttribute("id", "screencaps");
           screenCaps.setAttribute(
             "style",
-            `
-            background: url(${spriteUrl}) no-repeat center center/contain;
-            display: block;
-            position: absolute;
-            inset: 10px;
-            z-index: 1;
-            display: none;
-            `
+            `background: url(${spriteUrl}) no-repeat center center/contain; display: none;`
           );
           onSpriteHandler = function (e) {
-            const mouseCoords = { x: e.offsetX, y: e.offsetY };
+            const t = e.target,
+              ancestors = [t.offsetParent, t.offsetParent.offsetParent];
+            let mouseCoords;
+
+            if ($(t).is(".frame_hover")) {
+              mouseCoords = {
+                x: e.offsetX + ancestors.reduce((o, p) => o + p.offsetLeft, 0),
+                y: e.offsetY + ancestors.reduce((o, p) => o + p.offsetTop, 0),
+              };
+            } else {
+              mouseCoords = { x: e.offsetX, y: e.offsetY };
+            }
+
             bgImageSize(screenCaps, spriteUrl, (spritePos) => {
               getSelectedFrame(spriteUrl, spritePos, mouseCoords).then(
                 (frame) => {
@@ -710,12 +823,7 @@
               );
             });
           };
-          // link.setAttribute("href", spriteUrl);
-          // link.setAttribute("target", "_screencap");
-          link.setAttribute(
-            "style",
-            "display: block; background:transparent; position: absolute; top: 0px; left: 0px; bottom: 0px; right: 0px; cursor: pointer; z-index: 3;"
-          );
+          link.setAttribute("id", "spritemap");
           link.addEventListener("click", onSpriteHandler);
           screenCaps.appendChild(link);
           $el.prepend(screenCaps);
@@ -743,11 +851,23 @@
           });
         } else {
           const screenCaps = document.querySelector("#screencaps");
-          const link = screenCaps.querySelector("a");
+          const link = document.querySelector("#spritemap");
           screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
           link.removeEventListener("click", onSpriteHandler);
           onSpriteHandler = function (e) {
-            const mouseCoords = { x: e.offsetX, y: e.offsetY };
+            const t = e.target,
+              ancestors = [t.offsetParent, t.offsetParent.offsetParent];
+            let mouseCoords;
+
+            if ($(t).is(".frame_hover")) {
+              mouseCoords = {
+                x: e.offsetX + ancestors.reduce((o, p) => o + p.offsetLeft, 0),
+                y: e.offsetY + ancestors.reduce((o, p) => o + p.offsetTop, 0),
+              };
+            } else {
+              mouseCoords = { x: e.offsetX, y: e.offsetY };
+            }
+
             bgImageSize(screenCaps, spriteUrl, (spritePos) => {
               getSelectedFrame(spriteUrl, spritePos, mouseCoords).then(
                 (frame) => {
@@ -763,7 +883,7 @@
         const screenCaps = document.querySelector("#screencaps");
         const btn = document.querySelector("#scenecaps");
         if (screenCaps) {
-          const link = screenCaps.querySelector("a");
+          const link = document.querySelector("#spritemap");
           link.removeEventListener("click", onSpriteHandler);
           screenCaps.remove();
         }
