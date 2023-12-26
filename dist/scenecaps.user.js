@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.3
+// @version     0.1.4
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -191,17 +191,24 @@
    * @param {string} scene_id - The ID of the scene.
    * @param {string} primary_tag_id - The ID of the primary tag.
    * @param {number} seconds - The number of seconds for the marker.
+   * @param {string} tagName - The name of the primary tag (optional).
    * @returns {Promise<string>} - The ID of the created marker.
    */
-  async function createMarker(scene_id, primary_tag_id, seconds) {
+  async function createMarker(
+    scene_id,
+    primary_tag_id,
+    seconds,
+    tagName = null
+  ) {
     const reqData = {
       variables: {
+        title: tagName ? tagName : "",
         scene_id: scene_id,
         primary_tag_id: primary_tag_id,
         seconds: seconds,
       },
-      query: `mutation SceneMarkerCreate($seconds: Float!, $scene_id: ID!, $primary_tag_id: ID!) {
-      sceneMarkerCreate(input: {title:"", seconds: $seconds, scene_id: $scene_id, primary_tag_id: $primary_tag_id}) {
+      query: `mutation SceneMarkerCreate($title: String!, $seconds: Float!, $scene_id: ID!, $primary_tag_id: ID!) {
+      sceneMarkerCreate(input: {title: $title, seconds: $seconds, scene_id: $scene_id, primary_tag_id: $primary_tag_id}) {
         id
       }
     }`,
@@ -235,10 +242,10 @@
     return stash$1.callGQL(reqData);
   }
 
-  async function addMarker(tagId, time) {
+  async function addMarker(tagId, time, tagName = null) {
     const [, scene_id] = getScenarioAndID();
 
-    await createMarker(scene_id, tagId, time);
+    await createMarker(scene_id, tagId, time, tagName);
   }
 
   async function addTags(tag_ids) {
@@ -587,7 +594,7 @@
           .data("tag_name")
           .replace(/\b\w/g, (a) => a.toUpperCase());
       addTags([tag_id]);
-      addMarker(tag_id, frame.time).then(() => {
+      addMarker(tag_id, frame.time, tag_name).then(() => {
         annotateSprite(frame.spriteUrl);
         generateMarkers();
       });
