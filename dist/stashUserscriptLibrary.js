@@ -212,6 +212,7 @@
                 this.performers = {};
                 this.userscripts = [];
                 this.addEventListener = stashListener.addEventListener;
+                this.test = () => console.log('test');
             }
             async getVersion() {
                 const reqData = {
