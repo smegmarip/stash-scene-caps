@@ -2,14 +2,14 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.6
+// @version     0.1.7
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
 // @connect     localhost
 // @run-at      document-idle
 // @require     https://code.jquery.com/jquery-1.11.1.min.js
-// @require     https://raw.githubusercontent.com/7dJx1qP/stash-userscripts/master/src/StashUserscriptLibrary.js
+// @require     https://raw.githubusercontent.com/smegmarip/stash-scene-caps/main/dist/stashUserscriptLibrary.js
 // @downloadURL https://raw.githubusercontent.com/smegmarip/stash-scene-caps/main/dist/scenecaps.user.js
 // @updateURL   https://raw.githubusercontent.com/smegmarip/stash-scene-caps/main/dist/scenecaps.user.js
 // @grant       GM_xmlhttpRequest
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const { stash: stash$1 } = unsafeWindow.stash;
+  const { stash: stash$1 } = unsafeWindow._stash;
 
   const ui = {
     templates: {
@@ -752,74 +752,74 @@
     const sceneMarkers = await getSceneMarkers(scene_id);
     const screenCaps = document.querySelector("#screencaps");
     const link = document.querySelector("#spritemap");
-    if (sceneMarkers) {
-      let icon = ui.templates.icons.marker,
-        vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt"),
-        vtt = await download(vtt_url),
-        $markerEl,
-        marker,
-        $highlight,
-        f,
-        off;
-      link.innerHTML = "";
-      return bgImageSize(screenCaps, spriteUrl, (spritePos) => {
-        const frameData = getVTTFrames(vtt, spritePos.scale),
-          { x, y } = spritePos.position,
-          { width: w, height: h } = spritePos.size,
-          $queue_control = $(".queue-controls"),
-          $queue_content = $("#queue-content"),
-          $hl = $(`<ul></ul>`),
-          $hlParent = $(
-            `<div id="caps-highlight-container" style="left: ${x}px; top: ${y}px; width: ${w}px; height: ${h}px;"></div>`
-          ),
-          $navParent = $(`<div id="queue_navigation"></div>`),
-          $nav = $(`<ul></ul>`),
-          $prev = $(
-            `<li class="prev"><a title="Prev Scene">${ui.templates.icons.prev}</a></li>`
-          ),
-          $next = $(
-            `<li class="next"><a title="Next Scene">${ui.templates.icons.next}</a></li>`
-          );
+    let icon = ui.templates.icons.marker,
+      vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt"),
+      vtt = await download(vtt_url),
+      $markerEl,
+      marker,
+      $highlight,
+      f,
+      off;
+    link.innerHTML = "";
+    return bgImageSize(screenCaps, spriteUrl, (spritePos) => {
+      const frameData = getVTTFrames(vtt, spritePos.scale),
+        { x, y } = spritePos.position,
+        { width: w, height: h } = spritePos.size,
+        $queue_control = $(".queue-controls"),
+        $queue_content = $("#queue-content"),
+        $hl = $(`<ul></ul>`),
+        $hlParent = $(
+          `<div id="caps-highlight-container" style="left: ${x}px; top: ${y}px; width: ${w}px; height: ${h}px;"></div>`
+        ),
+        $navParent = $(`<div id="queue_navigation"></div>`),
+        $nav = $(`<ul></ul>`),
+        $prev = $(
+          `<li class="prev"><a title="Prev Scene">${ui.templates.icons.prev}</a></li>`
+        ),
+        $next = $(
+          `<li class="next"><a title="Next Scene">${ui.templates.icons.next}</a></li>`
+        );
 
-        $prev.click((e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const $psvg = $queue_control.find(".btn svg.fa-backward-step"),
-            $usvg = $queue_content.find(".btn-primary svg.fa-chevron-up");
-          if ($psvg.length) {
-            $psvg.closest(".btn").click();
-          } else if ($usvg.length) {
-            $usvg.closest(".btn").click();
-            setTimeout(() => $prev.click(), 2000);
-          }
-        });
-        $next.click((e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const $nsvg = $queue_control.find(".btn svg.fa-forward-step"),
-            $dsvg = $queue_content.find(".btn-primary svg.fa-chevron-down");
-          if ($nsvg.length) {
-            $nsvg.closest(".btn").click();
-          } else if ($dsvg.length) {
-            $dsvg.closest(".btn").click();
-            setTimeout(() => $next.click(), 2000);
-          }
-        });
-        $nav.append($prev);
-        $nav.append($next);
-        $navParent.append($nav);
-        link.appendChild($navParent.get(0));
-
-        for (f of frameData) {
-          $highlight = $(
-            `<li class="marker_highlight" style="min-width: ${f.offset.width}px; min-height: ${f.offset.height}px; width: ${f.offset.width}px; height: ${f.offset.height}px;"><a class="frame_hover"></a></li>`
-          );
-          $highlight.data("frame", { ...f, spriteUrl });
-          $hl.append($highlight);
+      $prev.click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const $psvg = $queue_control.find(".btn svg.fa-backward-step"),
+          $usvg = $queue_content.find(".btn-primary svg.fa-chevron-up");
+        if ($psvg.length) {
+          $psvg.closest(".btn").click();
+        } else if ($usvg.length) {
+          $usvg.closest(".btn").click();
+          setTimeout(() => $prev.click(), 2000);
         }
-        $hlParent.append($hl);
-        link.appendChild($hlParent.get(0));
+      });
+      $next.click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const $nsvg = $queue_control.find(".btn svg.fa-forward-step"),
+          $dsvg = $queue_content.find(".btn-primary svg.fa-chevron-down");
+        if ($nsvg.length) {
+          $nsvg.closest(".btn").click();
+        } else if ($dsvg.length) {
+          $dsvg.closest(".btn").click();
+          setTimeout(() => $next.click(), 2000);
+        }
+      });
+      $nav.append($prev);
+      $nav.append($next);
+      $navParent.append($nav);
+      link.appendChild($navParent.get(0));
 
+      for (f of frameData) {
+        $highlight = $(
+          `<li class="marker_highlight" style="min-width: ${f.offset.width}px; min-height: ${f.offset.height}px; width: ${f.offset.width}px; height: ${f.offset.height}px;"><a class="frame_hover"></a></li>`
+        );
+        $highlight.data("frame", { ...f, spriteUrl });
+        $hl.append($highlight);
+      }
+      $hlParent.append($hl);
+      link.appendChild($hlParent.get(0));
+
+      if (sceneMarkers) {
         for (marker of sceneMarkers) {
           f = frameData.reduce((s, o) => {
             s = Math.abs(marker.seconds - o.time) < 1.0 ? o : s;
@@ -840,13 +840,12 @@
             link.appendChild($markerEl.get(0));
           }
         }
-        return frameData;
-      });
-    }
-    return new Promise((resolve, reject) => reject(null));
+      }
+      return frameData;
+    });
   }
 
-  const { stash } = unsafeWindow.stash;
+  const { stash } = unsafeWindow._stash;
 
   function init() {
     let btnGrp = ".ml-auto .btn-group";
@@ -894,9 +893,7 @@
               btn.addEventListener("click", function () {
                 if (screenCaps.style.display === "none") {
                   screenCaps.style.display = "block";
-                  if (link.querySelectorAll(".screen-marker").length === 0) {
-                    annotateSprite(spriteUrl);
-                  }
+                  annotateSprite(spriteUrl);
                 } else {
                   screenCaps.style.display = "none";
                 }
@@ -906,6 +903,7 @@
         } else {
           const screenCaps = document.querySelector("#screencaps");
           screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
+          annotateSprite(spriteUrl);
         }
       } else {
         const screenCaps = document.querySelector("#screencaps");
