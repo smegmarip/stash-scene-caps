@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.8
+// @version     0.1.9
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -127,6 +127,9 @@
         right: "0px",
         cursor: "pointer",
         "z-index": 4,
+      },
+      "#spritemap svg": {
+        "pointer-events": "none",
       },
       ".screen-marker": {
         display: "flex",
@@ -842,7 +845,7 @@
       $nav.append($prev);
       $nav.append($next);
       $navParent.append($nav);
-      link.appendChild($navParent.get(0));
+      //link.appendChild($navParent.get(0));
 
       for (f of frameData) {
         timeIndex = formatDuration(f.time);
@@ -949,7 +952,7 @@
               modalOpen = !!$(".main > .row").find(
                 ".tagger-tabs > .modal-dialog"
               ).length;
-            if ($(t).is(".play_icon, .with_marker")) {
+            if ($(t).is(".play_index, .with_marker")) {
               playerSeek(frame.time);
             } else if (!modalOpen) {
               displayModal(frame);
