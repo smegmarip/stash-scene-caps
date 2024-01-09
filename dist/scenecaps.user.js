@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.7
+// @version     0.1.8
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -85,9 +85,11 @@
       },
       icons: {
         clapper: `<svg width="16" height="16" fill="#FFFFFF" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 402.598 402.598" xml:space="preserve"><g id="XMLID_42_"><rect id="XMLID_48_" x="192.93" y="272.598" width="50" height="40"/><path id="XMLID_43_" d="M148.53,182.598l205.016-91.236L312.888,0L29.667,126.039l33.263,74.745v201.813h310v-220H148.53zM136.685,111.25l38.762-17.249l-20.281,52.808l-38.762,17.25L136.685,111.25z M228.046,70.593l38.761-17.25l-20.28,52.808L207.765,123.4L228.046,70.593z M122.93,272.598v-30h190v30h-40v40h40v30h-190v-30h40v-40H122.93z"/></g></svg>`,
-        marker: `<svg xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;" height="50%" fill="#FD7E14" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
+        marker_md: `<svg xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;" height="50%" fill="#FD7E14" viewBox="0 0 384 512" class="marker_icon"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
         next: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>`,
         prev: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>`,
+        play: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" fill="#FFFFFF" version="1.1" class="play_icon" viewBox="0 0 50 62.5" xml:space="preserve"><g><path d="M25.00003,1.00006c-13.23999,0-24,10.77002-24,24c0,13.24011,10.76001,23.99988,24,23.99988   c13.22998,0,24-10.75977,24-23.99988C49.00003,11.77008,38.23001,1.00006,25.00003,1.00006z M34.34012,26.21014l-14.41016,7.78003   c-0.91992,0.48975-2.03003-0.17017-2.03003-1.20996V17.23004c0-1.03992,1.11011-1.70996,2.03003-1.20996l14.41016,7.7699   C35.30008,24.31,35.30008,25.69012,34.34012,26.21014z"/></g></svg>`,
+        marker_sm: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#FFFFFF" viewBox="0 0 384 512" class="mark_icon"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
       },
       toast: {
         top: `<div class="fade toast success show" role="alert" aria-live="assertive" aria-atomic="true">
@@ -134,6 +136,12 @@
         "z-index": 3,
         "pointer-events": "none",
       },
+      ".screen-marker .marker_preview": {
+        height: "100%",
+        display: "flex",
+        "justify-content": "center",
+        "align-items": "center",
+      },
       "#caps-highlight-container": {
         position: "absolute",
         "z-index": 2,
@@ -155,15 +163,39 @@
         "justify-content": "center",
         position: "relative",
       },
-      ".marker_highlight a": {
+      ".marker_highlight > a": {
         width: "100%",
         height: "100%",
         background: "white",
         transition: "opacity 1s ease",
         opacity: 0,
       },
-      ".marker_highlight a:hover": {
+      ".marker_highlight > a:hover": {
         opacity: 0.5,
+      },
+      ".marker_highlight > .frame_actions": {
+        position: "absolute",
+        height: "34px",
+        padding: 0,
+        margin: 0,
+        display: "flex",
+        "align-items": "center",
+        "justify-content": "space-around",
+        width: "100%",
+        "z-index": 7,
+      },
+      ".marker_highlight > .frame_actions a": {
+        opacity: 0,
+        transition: "opacity 1s ease",
+      },
+      ".marker_highlight > .frame_actions a svg": {
+        transition: "fill 1s ease",
+      },
+      ".marker_highlight:hover > .frame_actions a": {
+        opacity: 1,
+      },
+      ".marker_highlight:hover > .frame_actions a:hover svg": {
+        fill: "#007BFF",
       },
       "#queue_navigation": {
         position: "absolute",
@@ -752,13 +784,16 @@
     const sceneMarkers = await getSceneMarkers(scene_id);
     const screenCaps = document.querySelector("#screencaps");
     const link = document.querySelector("#spritemap");
-    let icon = ui.templates.icons.marker,
+    let icon_marker = ui.templates.icons.marker_md,
+      icon_play = ui.templates.icons.play,
+      icon_mark = ui.templates.icons.marker_sm,
       vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt"),
       vtt = await download(vtt_url),
       $markerEl,
       marker,
       $highlight,
       f,
+      timeIndex,
       off;
     link.innerHTML = "";
     return bgImageSize(screenCaps, spriteUrl, (spritePos) => {
@@ -810,8 +845,19 @@
       link.appendChild($navParent.get(0));
 
       for (f of frameData) {
+        timeIndex = formatDuration(f.time);
         $highlight = $(
-          `<li class="marker_highlight" style="min-width: ${f.offset.width}px; min-height: ${f.offset.height}px; width: ${f.offset.width}px; height: ${f.offset.height}px;"><a class="frame_hover"></a></li>`
+          `<li 
+            id="frame_${f.index}" 
+            class="marker_highlight" 
+            style="min-width: ${f.offset.width}px; min-height: ${f.offset.height}px; width: ${f.offset.width}px; height: ${f.offset.height}px;"
+          >
+          <div class="frame_actions">
+            <a class="play_index" title="Play from ${timeIndex}">${icon_play}</a>
+            <a class="mark_index" title="Add marker at ${timeIndex}">${icon_mark}</a>
+          </div>
+          <a class="frame_hover" title="${timeIndex}"></a>
+          </li>`
         );
         $highlight.data("frame", { ...f, spriteUrl });
         $hl.append($highlight);
@@ -826,6 +872,7 @@
             return s;
           }, null);
           if (f) {
+            timeIndex = formatDuration(f.time);
             off = ["left", "top", "right", "bottom"].reduce((o, k) => {
               if (["left", "right"].includes(k)) {
                 o[k] += x;
@@ -835,14 +882,37 @@
               return o;
             }, f.offset);
             $markerEl = $(
-              `<div class="screen-marker" style="left: ${off.left}px; top: ${off.top}px; width: ${off.width}px; height: ${off.height}px;">${icon}</div>`
+              `<div class="screen-marker" style="left: ${off.left}px; top: ${off.top}px; width: ${off.width}px; height: ${off.height}px;">
+                <a class="marker_preview" title="Play from ${timeIndex}">
+                  ${icon_marker}
+                </a>
+              </div>`
             );
             link.appendChild($markerEl.get(0));
+            $("#spritemap").find(`#frame_${f.index} .frame_actions`).hide();
+            $("#spritemap")
+              .find(`#frame_${f.index} .frame_hover`)
+              .addClass("with_marker");
           }
         }
       }
       return frameData;
     });
+  }
+
+  function playerSeek(time) {
+    const video = document.getElementById("VideoJsPlayer");
+    const screenCaps = document.querySelector("#screencaps");
+    if (video) {
+      const player = video.player;
+      if (player) {
+        if (screenCaps.style.display !== "none") {
+          screenCaps.style.display = "none";
+        }
+        player.currentTime(time);
+        player.play();
+      }
+    }
   }
 
   const { stash } = unsafeWindow._stash;
@@ -875,8 +945,15 @@
           link.setAttribute("id", "spritemap");
           link.addEventListener("click", function (e) {
             const t = e.target,
-              frame = $(t).closest(".marker_highlight").data("frame");
-            displayModal(frame);
+              frame = $(t).closest(".marker_highlight").data("frame"),
+              modalOpen = !!$(".main > .row").find(
+                ".tagger-tabs > .modal-dialog"
+              ).length;
+            if ($(t).is(".play_icon, .with_marker")) {
+              playerSeek(frame.time);
+            } else if (!modalOpen) {
+              displayModal(frame);
+            }
           });
           screenCaps.appendChild(link);
           $el.prepend(screenCaps);
