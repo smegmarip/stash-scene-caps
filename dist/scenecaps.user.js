@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.1.9
+// @version     0.2.1
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -175,6 +175,7 @@
       },
       ".marker_highlight > a:hover": {
         opacity: 0.5,
+        cursor: "pointer",
       },
       ".marker_highlight > .frame_actions": {
         position: "absolute",
@@ -186,6 +187,7 @@
         "justify-content": "space-around",
         width: "100%",
         "z-index": 7,
+        bottom: 0,
       },
       ".marker_highlight > .frame_actions a": {
         opacity: 0,
@@ -857,9 +859,9 @@
           >
           <div class="frame_actions">
             <a class="play_index" title="Play from ${timeIndex}">${icon_play}</a>
-            <a class="mark_index" title="Add marker at ${timeIndex}">${icon_mark}</a>
+            <a class="mark_index" style="display: none" title="Add marker at ${timeIndex}">${icon_mark}</a>
           </div>
-          <a class="frame_hover" title="${timeIndex}"></a>
+          <a class="frame_hover" title="Add marker at ${timeIndex}"></a>
           </li>`
         );
         $highlight.data("frame", { ...f, spriteUrl });
@@ -919,6 +921,17 @@
   }
 
   const { stash } = unsafeWindow._stash;
+  const onSpriteClick = function (e) {
+    const t = e.target,
+      frame = $(t).closest(".marker_highlight").data("frame"),
+      modalOpen = !!$(".main > .row").find(".tagger-tabs > .modal-dialog")
+        .length;
+    if ($(t).is(".play_index, .with_marker")) {
+      playerSeek(frame.time);
+    } else if (!modalOpen) {
+      displayModal(frame);
+    }
+  };
 
   function init() {
     let btnGrp = ".ml-auto .btn-group";
@@ -946,18 +959,7 @@
             `background: url(${spriteUrl}) no-repeat center center/contain; display: none;`
           );
           link.setAttribute("id", "spritemap");
-          link.addEventListener("click", function (e) {
-            const t = e.target,
-              frame = $(t).closest(".marker_highlight").data("frame"),
-              modalOpen = !!$(".main > .row").find(
-                ".tagger-tabs > .modal-dialog"
-              ).length;
-            if ($(t).is(".play_index, .with_marker")) {
-              playerSeek(frame.time);
-            } else if (!modalOpen) {
-              displayModal(frame);
-            }
-          });
+          link.addEventListener("click", onSpriteClick);
           screenCaps.appendChild(link);
           $el.prepend(screenCaps);
           waitForElm(btnGrp).then(async ($btnGrpEl) => {
@@ -972,8 +974,11 @@
               $btnGrpEl.prepend(btn);
               btn.addEventListener("click", function () {
                 if (screenCaps.style.display === "none") {
-                  screenCaps.style.display = "block";
-                  annotateSprite(spriteUrl);
+                  const [_, scene_id] = getScenarioAndID();
+                  getUrlSprite(scene_id).then((spriteUrl) => {
+                    screenCaps.style.display = "block";
+                    annotateSprite(spriteUrl);
+                  });
                 } else {
                   screenCaps.style.display = "none";
                 }
@@ -982,7 +987,10 @@
           });
         } else {
           const screenCaps = document.querySelector("#screencaps");
+          const link = document.querySelector("#spritemap");
           screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
+          link.removeEventListener("click", onSpriteClick);
+          link.addEventListener("click", onSpriteClick);
           annotateSprite(spriteUrl);
         }
       } else {
@@ -1001,6 +1009,12 @@
   stash.addEventListener("page:scene", init);
   stash.addEventListener("page:scene", onKeyPressSave);
   stash.addEventListener("page:image", onKeyPressSave);
+  navigation.addEventListener("navigate", () => {
+    if (/^\/scenes?\//i.test(window.location.pathname)) {
+      init();
+      onKeyPressSave();
+    }
+  });
 
   $(function () {
     $(window).resize(init);
