@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.2.1
+// @version     0.2.2
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -18,7 +18,8 @@
 (function () {
   "use strict";
 
-  const { stash: stash$1 } = unsafeWindow._stash;
+  const { stash: stash$1 } = unsafeWindow._stash,
+    NUMBER_OF_TAGS = 21;
 
   const ui = {
     templates: {
@@ -110,6 +111,13 @@
         order: -1,
         "background-color": "var(--body-color)",
         "z-index": 10,
+      },
+      ".tagger-tabs > .modal-dialog > .modal-content": {
+        "max-height": "100vh",
+      },
+      ".tagger-tabs > .modal-dialog > .modal-content > .modal-body": {
+        "overflow-y": "auto",
+        "max-height": "calc(100vh - 300px)",
       },
       "#screencaps": {
         display: "block",
@@ -752,7 +760,7 @@
     });
 
     getLatestTags().then((tags) => {
-      updateSearch(tags.slice(0, 12));
+      updateSearch(tags.slice(0, NUMBER_OF_TAGS));
 
       $("#stashtag-search").on("input", function () {
         const searchVal = $(this).val().toLowerCase(),
@@ -761,7 +769,7 @@
             return tag.name.toLowerCase().includes(searchVal);
           });
         $clearBtn.toggleClass("d-none", !searchVal);
-        updateSearch(filteredTags.slice(0, 12));
+        updateSearch(filteredTags.slice(0, NUMBER_OF_TAGS));
       });
     });
   }
@@ -914,8 +922,10 @@
         if (screenCaps.style.display !== "none") {
           screenCaps.style.display = "none";
         }
-        player.currentTime(time);
-        player.play();
+
+        player.play().then(function () {
+          player.currentTime(time);
+        });
       }
     }
   }
