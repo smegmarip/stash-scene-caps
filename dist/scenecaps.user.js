@@ -2,7 +2,7 @@
 // @name        scenecaps
 // @description Toggle Screen Caps on Scene Player
 // @namespace   https://github.com/smegmarip
-// @version     0.2.2
+// @version     0.2.3
 // @homepage    https://github.com/smegmarip/stash-scene-caps/
 // @author      smegmarip
 // @match       http://localhost:9999/*
@@ -118,6 +118,9 @@
       ".tagger-tabs > .modal-dialog > .modal-content > .modal-body": {
         "overflow-y": "auto",
         "max-height": "calc(100vh - 300px)",
+      },
+      "#stashtag-results .tag-card:hover": {
+        background: "rgba(255,255,255,0.1)",
       },
       "#screencaps": {
         display: "block",
