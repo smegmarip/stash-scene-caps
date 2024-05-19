@@ -2,6 +2,7 @@
   "use strict";
 
   const NUMBER_OF_TAGS = 21;
+  let SCENE_VTT;
 
   const ui = {
     templates: {
@@ -622,6 +623,23 @@
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
 
+  function getSceneDuration(vtt) {
+    const decodedVtt = atob(vtt.replace("data:text/vtt;base64,", ""));
+    const lines = decodedVtt.split("\n");
+    const duration_hms = lines[lines.length - 3]
+      .split("-->")[1]
+      .trim()
+      .split(":");
+    if (duration_hms && Array.isArray(duration_hms)) {
+      const duration_s =
+        parseInt(duration_hms[0]) * 3600 +
+        parseInt(duration_hms[1]) * 60 +
+        parseFloat(duration_hms[2]);
+      return duration_s;
+    }
+    return -1;
+  }
+
   function onKeyPressSave() {
     let btnGrp = "#scene-edit-details .edit-buttons";
     waitForElm(btnGrp).then(async ($el) => {
@@ -797,6 +815,7 @@
       f,
       timeIndex,
       off;
+    SCENE_VTT = vtt;
     link.innerHTML = "";
     return bgImageSize(screenCaps, spriteUrl, (spritePos) => {
       const frameData = getVTTFrames(vtt, spritePos.scale),
@@ -902,9 +921,11 @@
     });
   }
 
-  function playerSeek(time) {
+  function playerSeek(time, play) {
     const video = document.getElementById("VideoJsPlayer");
     const screenCaps = document.querySelector("#screencaps");
+    let duration = -1;
+    play = typeof play === "undefined" ? true : play;
     if (video) {
       const player = video.player;
       if (player) {
@@ -912,8 +933,20 @@
           screenCaps.style.display = "none";
         }
 
+        // Adjust for player time dilation.
+        if (SCENE_VTT) {
+          duration = getSceneDuration(SCENE_VTT);
+          const playerDuration = player.duration();
+          if (duration > 0 && playerDuration) {
+            time = (time / duration) * playerDuration;
+          }
+        }
+
         player.play().then(function () {
           player.currentTime(time);
+          if (!play) {
+            player.pause();
+          }
         });
       }
     }
@@ -925,7 +958,7 @@
       modalOpen = !!$(".main > .row").find(".tagger-tabs > .modal-dialog")
         .length;
     if ($(t).is(".play_index, .with_marker")) {
-      playerSeek(frame.time);
+      playerSeek(frame.time, false);
     } else if (!modalOpen) {
       displayModal(frame);
     }
@@ -934,6 +967,7 @@
   function init() {
     let btnGrp = ".ml-auto .btn-group";
     let wrapper = ".VideoPlayer .video-wrapper";
+    SCENE_VTT = null; // Reset VTT
 
     $(function () {
       if (!document.querySelector("#screencaps-styles")) {

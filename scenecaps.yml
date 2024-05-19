@@ -1,7 +1,7 @@
 name: Scene Caps
 # requires: StashUserscriptLibrary
 description: Toggle Screen Caps on Scene Player.
-version: 0.2.4
+version: 0.2.5
 ui:
   requires:
     - StashUserscriptLibrary
