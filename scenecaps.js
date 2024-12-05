@@ -68,7 +68,7 @@
         },
       },
       icons: {
-        clapper: `<svg width="16" height="16" fill="#FFFFFF" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 402.598 402.598" xml:space="preserve"><g id="XMLID_42_"><rect id="XMLID_48_" x="192.93" y="272.598" width="50" height="40"/><path id="XMLID_43_" d="M148.53,182.598l205.016-91.236L312.888,0L29.667,126.039l33.263,74.745v201.813h310v-220H148.53zM136.685,111.25l38.762-17.249l-20.281,52.808l-38.762,17.25L136.685,111.25z M228.046,70.593l38.761-17.25l-20.28,52.808L207.765,123.4L228.046,70.593z M122.93,272.598v-30h190v30h-40v40h40v30h-190v-30h40v-40H122.93z"/></g></svg>`,
+        clapper: `<svg width="14" height="14" class="svg-inline--fa" fill="#FFFFFF" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 402.598 402.598" xml:space="preserve"><g id="XMLID_42_"><rect id="XMLID_48_" x="192.93" y="272.598" width="50" height="40"/><path id="XMLID_43_" d="M148.53,182.598l205.016-91.236L312.888,0L29.667,126.039l33.263,74.745v201.813h310v-220H148.53zM136.685,111.25l38.762-17.249l-20.281,52.808l-38.762,17.25L136.685,111.25z M228.046,70.593l38.761-17.25l-20.28,52.808L207.765,123.4L228.046,70.593z M122.93,272.598v-30h190v30h-40v40h40v30h-190v-30h40v-40H122.93z"/></g></svg>`,
         marker_md: `<svg xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;" height="50%" fill="#FD7E14" viewBox="0 0 384 512" class="marker_icon"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
         next: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>`,
         prev: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>`,
@@ -256,6 +256,13 @@
       "#queue_navigation > ul > li > a:hover > svg": {
         color: "black",
       },
+      ".marker_highlight > a.with_playback:hover": {
+        opacity: 1,
+      },
+      ".frame_hover video.hidden": {
+        opacity: 0,
+        "pointer-events": "none",
+      },
     },
   };
 
@@ -339,6 +346,27 @@
     };
     let result = await stash.callGQL(reqData);
     return result.data?.findScene?.scene_markers;
+  }
+
+  async function getSceneStream(scene_id) {
+    const reqData = {
+      variables: {
+        scene_id,
+      },
+      query: `
+          query FindSceneMarkers($scene_id: ID) {
+            findScene(id: $scene_id) {
+              play_duration
+              paths {
+                stream
+              }
+            }
+          }`,
+    };
+    let result = await stash.callGQL(reqData),
+      play_duration = result.data?.findScene?.play_duration,
+      stream = result.data?.findScene?.paths?.stream;
+    return { stream, duration: play_duration };
   }
 
   /**
@@ -537,6 +565,61 @@
     });
   }
 
+  async function getFrameUrl(spriteSheet, vtt) {
+    return new Promise((resolve, reject) => {
+      // Validate the VTT object
+      if (!vtt) {
+        reject(new Error("Invalid VTT object"));
+        return;
+      }
+
+      // Create a canvas to crop the image
+      const canvas = document.createElement("canvas");
+      canvas.width = vtt.width;
+      canvas.height = vtt.height;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        reject(new Error("Failed to create canvas context"));
+        return;
+      }
+
+      // Draw the cropped section of the spritesheet onto the canvas
+      ctx.drawImage(
+        spriteSheet,
+        vtt.left,
+        vtt.top,
+        vtt.width,
+        vtt.height, // Source rectangle from spritesheet
+        0,
+        0,
+        vtt.width,
+        vtt.height // Destination rectangle on canvas
+      );
+
+      // Convert the canvas content to a Blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          // Create a Blob URL for the cropped image
+          const blobUrl = URL.createObjectURL(blob);
+
+          // Cleanup the canvas
+          canvas.width = 0;
+          canvas.height = 0;
+
+          resolve(blobUrl);
+        } else {
+          reject(new Error("Failed to create Blob from canvas"));
+        }
+      });
+
+      // Explicitly dereference the canvas to free up memory
+      setTimeout(() => {
+        canvas.remove();
+      }, 0);
+    });
+  }
+
   function getVTToffsets(vtt, scaleFactor) {
     let time_seconds = 0;
     let left,
@@ -696,7 +779,7 @@
       };
 
       if (typeof callback == "function") {
-        callback(result);
+        callback({ img, spritePos: result });
       }
     };
     img.src = url;
@@ -809,15 +892,26 @@
       icon_mark = ui.templates.icons.marker_sm,
       vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt"),
       vtt = await download(vtt_url),
+      streamData = await getSceneStream(scene_id),
+      streamURL,
+      streamDuration,
+      frameUrl,
       $markerEl,
       marker,
       $highlight,
+      $preview,
       f,
+      n,
+      i,
       timeIndex,
       off;
+    if (streamData) {
+      streamURL = streamData.stream;
+      streamDuration = streamData.duration;
+    }
     SCENE_VTT = vtt;
     link.innerHTML = "";
-    return bgImageSize(screenCaps, spriteUrl, (spritePos) => {
+    return bgImageSize(screenCaps, spriteUrl, async ({ img, spritePos }) => {
       const frameData = getVTTFrames(vtt, spritePos.scale),
         { x, y } = spritePos.position,
         { width: w, height: h } = spritePos.size,
@@ -865,7 +959,9 @@
       $navParent.append($nav);
       //link.appendChild($navParent.get(0));
 
-      for (f of frameData) {
+      for (i = 0; i < frameData.length; i++) {
+        f = frameData[i];
+        n = i + 1 < frameData.length ? frameData[i + 1] : null;
         timeIndex = formatDuration(f.time);
         $highlight = $(
           `<li
@@ -916,6 +1012,37 @@
               .addClass("with_marker");
           }
         }
+        $preview = $("#spritemap").find(".frame_hover");
+        $preview.hover(
+          function () {
+            console.dir($(this));
+            if ($(this).find("video").length === 0) {
+              $highlight = $(this).closest(".marker_highlight");
+              f = $highlight.data("frame");
+              $preview = $(
+                `<video 
+                  disableremoteplayback="" 
+                  playsinline="" 
+                  src="${streamURL}#t=${f.time},${f.time + 60}" 
+                  autoplay="" loop="" 
+                  class="wall-item-media hidden"
+                  ></video>`
+              );
+              $(this)
+                .append($preview)
+                .addClass("with_playback")
+                .find("video")
+                .removeClass("hidden")
+                .get(0)
+                .play();
+            } else {
+              $(this).find("video").removeClass("hidden").get(0).play();
+            }
+          },
+          function () {
+            $(this).find("video").addClass("hidden").get(0).pause();
+          }
+        );
       }
       return frameData;
     });
@@ -965,7 +1092,7 @@
   };
 
   function init() {
-    let btnGrp = ".ml-auto .btn-group";
+    let btnGrp = ".scene-toolbar-group:nth-child(2)";
     let wrapper = ".VideoPlayer .video-wrapper";
     SCENE_VTT = null; // Reset VTT
 
@@ -997,13 +1124,14 @@
           waitForElm(btnGrp).then(async ($btnGrpEl) => {
             if (!document.querySelector("#scenecaps")) {
               const btn = document.createElement("button");
-              btn.setAttribute("id", "scenecaps");
-              btn.setAttribute("class", "minimal pr-1 btn btn-secondary");
               const spn = document.createElement("span");
+              btn.setAttribute("id", "scenecaps");
+              btn.setAttribute("class", "minimal btn btn-secondary");
+              btn.setAttribute("title", "Display Contact Sheet");
               const svg = ui.templates.icons.clapper;
-              spn.innerHTML = svg;
-              btn.appendChild(spn);
-              $btnGrpEl.prepend(btn);
+              btn.innerHTML = svg;
+              spn.appendChild(btn);
+              $btnGrpEl.prepend(spn);
               btn.addEventListener("click", function () {
                 if (screenCaps.style.display === "none") {
                   const [_, scene_id] = getScenarioAndID();
@@ -1031,8 +1159,8 @@
         if (screenCaps) {
           screenCaps.remove();
         }
-        if (btn) {
-          btn.remove();
+        if (btn && btn.parentElement.tagName == "span") {
+          btn.parentElement.remove();
         }
       }
     });
