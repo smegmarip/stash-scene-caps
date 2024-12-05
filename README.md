@@ -1,8 +1,8 @@
 # Stash Scene Caps
 
-Displays an overlay of your Stash scene caps and creates markers from each tile.
+Displays an overlay and video previews of your Stash sprite sheet and creates markers from each tile.
 
-# Stash Userscripts
+# Stash Plugin
 
 Install as a Stash plugin.
 
