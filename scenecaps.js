@@ -259,6 +259,7 @@
       ".marker_highlight > a.with_playback:hover": {
         opacity: 1,
       },
+      ".frame_hover": {},
       ".frame_hover video.hidden": {
         opacity: 0,
         "pointer-events": "none",
@@ -291,7 +292,12 @@
     for (const selector in styles) {
       cssString += selector + " { ";
       for (const property in styles[selector]) {
-        cssString += property + ": " + styles[selector][property] + "; ";
+        if ($.isPlainObject(styles[selector][property])) {
+          cssString +=
+            property + ": " + buildStyles(styles[selector][property]);
+        } else {
+          cssString += property + ": " + styles[selector][property] + "; ";
+        }
       }
       cssString += "} ";
     }
@@ -900,6 +906,7 @@
       marker,
       $highlight,
       $preview,
+      $spinner,
       f,
       n,
       i,
@@ -1013,23 +1020,32 @@
           }
         }
         $preview = $("#spritemap").find(".frame_hover");
+        $spinner = $('<div class="loader"></div>');
         $preview.hover(
           function () {
-            console.dir($(this));
-            if ($(this).find("video").length === 0) {
-              $highlight = $(this).closest(".marker_highlight");
+            var $this = $(this);
+            if ($this.find("video").length === 0) {
+              $this.closest(".marker_highlight").append($spinner);
+              $highlight = $this.closest(".marker_highlight");
               f = $highlight.data("frame");
-              $preview = $(
+              var $video = $(
                 `<video 
                   disableremoteplayback="" 
                   playsinline="" 
                   src="${streamURL}#t=${f.time},${f.time + 60}" 
+                  preload="auto"
                   autoplay="" loop="" 
                   class="wall-item-media hidden"
                   ></video>`
               );
-              $(this)
-                .append($preview)
+              $video.on("loadeddata", function () {
+                $(this).closest(".marker_highlight").find(".loader").remove();
+              });
+              setTimeout(function () {
+                $this.closest(".marker_highlight").find(".loader").remove();
+              }, 10000);
+              $this
+                .append($video)
                 .addClass("with_playback")
                 .find("video")
                 .removeClass("hidden")
