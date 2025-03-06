@@ -1,11 +1,12 @@
 name: Scene Caps
-# requires: StashUserscriptLibrary
+# requires: CommunityScriptsUILibrary
 description: Toggle Screen Caps on Scene Player.
-version: 0.3.1
+version: 1.0.0
 ui:
+  requires:
+    - CommunityScriptsUILibrary
   javascript:
-    - https://cdn.jsdelivr.net/npm/jquery@1.11.1/dist/jquery.min.js
-    - stashUserscriptLibrary.js
+    - jquery.min.js
     - scenecaps.js
   css:
     - scenecaps.css

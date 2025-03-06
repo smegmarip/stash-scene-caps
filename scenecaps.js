@@ -1,6 +1,8 @@
-(function () {
-  "use strict";
+(async () => {
+  'use strict';
 
+  const csLib = window.csLib;
+  const TARGET_SELECTOR = '.VideoPlayer .video-wrapper';
   const NUMBER_OF_TAGS = 21;
   let SCENE_VTT;
 
@@ -11,7 +13,7 @@
             <div draggable="false" class="tag-card zoom-0 grid-card card">
               <div class="thumbnail-section">
                 <a class="tag-card-header" style="cursor: pointer">
-                  <img class="tag-card-image" alt="tag name" src="http://stash.tropicalnet.local/tag/[tag_id]/image?t=[timestamp]">
+                  <img class="tag-card-image" alt="tag name" src="[base_url]/tag/[tag_id]/image?t=[timestamp]">
                 </a>
               </div>
               <div class="card-section">
@@ -72,8 +74,10 @@
         marker_md: `<svg xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;" height="50%" fill="#FD7E14" viewBox="0 0 384 512" class="marker_icon"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
         next: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>`,
         prev: `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left fa-icon fa-fw" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>`,
+        pause: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" fill="#FFFFFF" version="1.1" class="pause_icon" viewBox="0 0 50 62.5" xml:space="preserve"><g><path d="M25,1C11.76,1,1,11.77,1,25s10.76,24,24,24s24-10.77,24-24S38.24,1,25,1z M19,17h4v19h-4V17z M27,17h4v19h-4V17z"/></g></svg>`,
         play: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" fill="#FFFFFF" version="1.1" class="play_icon" viewBox="0 0 50 62.5" xml:space="preserve"><g><path d="M25.00003,1.00006c-13.23999,0-24,10.77002-24,24c0,13.24011,10.76001,23.99988,24,23.99988   c13.22998,0,24-10.75977,24-23.99988C49.00003,11.77008,38.23001,1.00006,25.00003,1.00006z M34.34012,26.21014l-14.41016,7.78003   c-0.91992,0.48975-2.03003-0.17017-2.03003-1.20996V17.23004c0-1.03992,1.11011-1.70996,2.03003-1.20996l14.41016,7.7699   C35.30008,24.31,35.30008,25.69012,34.34012,26.21014z"/></g></svg>`,
         marker_sm: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#FFFFFF" viewBox="0 0 384 512" class="mark_icon"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>`,
+        tag: `<svg focusable="false" class="svg-inline--fa fa-tag fa-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="rgba(255, 255, 255, 0.75)" d="M0 80V229.5c0 17 6.7 33.3 18.7 45.3l176 176c25 25 65.5 25 90.5 0L418.7 317.3c25-25 25-65.5 0-90.5l-176-176c-12-12-28.3-18.7-45.3-18.7H48C21.5 32 0 53.5 0 80zm112 32a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"></path></svg>`,
       },
       toast: {
         top: `<div class="fade toast success show" role="alert" aria-live="assertive" aria-atomic="true">
@@ -84,196 +88,201 @@
       },
     },
     styles: {
-      ".tagger-tabs": {
-        position: "absolute",
-        flex: "0 0 450px",
-        "max-width": "450px",
-        "min-width": "450px",
-        height: "100%",
-        overflow: "auto",
+      '.tagger-tabs': {
+        position: 'absolute',
+        flex: '0 0 450px',
+        'max-width': '450px',
+        'min-width': '450px',
+        height: '100%',
+        overflow: 'auto',
         order: -1,
-        "background-color": "var(--body-color)",
-        "z-index": 10,
+        'background-color': 'var(--body-color)',
+        'z-index': 10,
       },
-      ".tagger-tabs > .modal-dialog > .modal-content": {
-        "max-height": "100vh",
+      '.tagger-tabs > .modal-dialog > .modal-content': {
+        'max-height': '100vh',
       },
-      ".tagger-tabs > .modal-dialog > .modal-content > .modal-body": {
-        "overflow-y": "auto",
-        "max-height": "calc(100vh - 300px)",
+      '.tagger-tabs > .modal-dialog > .modal-content > .modal-body': {
+        'overflow-y': 'auto',
+        'max-height': 'calc(100vh - 300px)',
       },
-      "#stashtag-results .tag-card.card": {
-        width: "32%",
-        "max-width": "32%",
+      '#stashtag-results .tag-card.card': {
+        width: '32%',
+        'max-width': '32%',
       },
-      "#stashtag-results .tag-card:hover": {
-        background: "rgba(255,255,255,0.1)",
+      '#stashtag-results .tag-card:hover': {
+        background: 'rgba(255,255,255,0.1)',
       },
-      "#screencaps": {
-        display: "block",
-        position: "absolute",
-        inset: "10px",
-        "z-index": 1,
+      '#screencaps': {
+        display: 'block',
+        position: 'absolute',
+        inset: '10px',
+        'z-index': 1,
       },
-      "#spritemap": {
-        display: "block",
-        background: "transparent",
-        position: "absolute",
-        top: "0px",
-        left: "0px",
-        bottom: "0px",
-        right: "0px",
-        cursor: "pointer",
-        "z-index": 4,
+      '#spritemap': {
+        display: 'block',
+        background: 'transparent',
+        position: 'absolute',
+        top: '0px',
+        left: '0px',
+        bottom: '0px',
+        right: '0px',
+        cursor: 'pointer',
+        'z-index': 4,
       },
-      "#spritemap svg": {
-        "pointer-events": "none",
+      '#spritemap svg': {
+        'pointer-events': 'none',
       },
-      ".screen-marker": {
-        display: "flex",
-        "justify-content": "center",
-        "align-items": "center",
-        position: "absolute",
-        "z-index": 3,
-        "pointer-events": "none",
+      '.screen-marker': {
+        display: 'flex',
+        'justify-content': 'center',
+        'align-items': 'center',
+        position: 'absolute',
+        'z-index': 3,
+        'pointer-events': 'none',
       },
-      ".screen-marker .marker_preview": {
-        height: "100%",
-        display: "flex",
-        "justify-content": "center",
-        "align-items": "center",
+      '.screen-marker .marker_preview': {
+        height: '100%',
+        display: 'flex',
+        'justify-content': 'center',
+        'align-items': 'center',
       },
-      "#caps-highlight-container": {
-        position: "absolute",
-        "z-index": 2,
+      '#caps-highlight-container': {
+        position: 'absolute',
+        'z-index': 2,
       },
-      "#caps-highlight-container > ul": {
+      '#caps-highlight-container > ul': {
         margin: 0,
         padding: 0,
-        width: "100%",
-        display: "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "list-style": "none",
+        width: '100%',
+        display: 'flex',
+        'flex-direction': 'row',
+        'flex-wrap': 'wrap',
+        'list-style': 'none',
       },
-      ".marker_highlight": {
+      '.marker_highlight': {
         margin: 0,
         padding: 0,
-        "align-items": "center",
-        display: "flex",
-        "justify-content": "center",
-        position: "relative",
+        'align-items': 'center',
+        display: 'flex',
+        'justify-content': 'center',
+        position: 'relative',
       },
-      ".marker_highlight > a": {
-        width: "100%",
-        height: "100%",
-        background: "white",
-        transition: "opacity 1s ease",
+      '.marker_highlight > a': {
+        width: '100%',
+        height: '100%',
+        background: 'white',
+        transition: 'opacity 1s ease',
         opacity: 0,
       },
-      ".marker_highlight > a:hover": {
+      '.marker_highlight > a:hover': {
         opacity: 0.5,
-        cursor: "pointer",
+        cursor: 'pointer',
       },
-      ".marker_highlight > .frame_actions": {
-        position: "absolute",
-        height: "34px",
+      '.marker_highlight > .frame_actions': {
+        position: 'absolute',
+        height: '34px',
         padding: 0,
         margin: 0,
-        display: "flex",
-        "align-items": "center",
-        "justify-content": "space-around",
-        width: "100%",
-        "z-index": 7,
+        display: 'flex',
+        'align-items': 'center',
+        'justify-content': 'center',
+        width: '100%',
+        'z-index': 7,
         bottom: 0,
       },
-      ".marker_highlight > .frame_actions a": {
+      '.marker_highlight > .frame_actions a': {
         opacity: 0,
-        transition: "opacity 1s ease",
+        transition: 'opacity 1s ease',
       },
-      ".marker_highlight > .frame_actions a svg": {
-        transition: "fill 1s ease",
+      '.marker_highlight > .frame_actions a svg': {
+        transition: 'fill 1s ease',
       },
-      ".marker_highlight:hover > .frame_actions a": {
+      '.marker_highlight:hover > .frame_actions a': {
         opacity: 1,
       },
-      ".marker_highlight:hover > .frame_actions a:hover svg": {
-        fill: "#007BFF",
+      '.marker_highlight:hover > .frame_actions a:hover svg': {
+        fill: '#007BFF',
       },
-      "#queue_navigation": {
-        position: "absolute",
-        "z-index": 5,
-        width: "100%",
-        height: "100%",
+      '#queue_navigation': {
+        position: 'absolute',
+        'z-index': 5,
+        width: '100%',
+        height: '100%',
         top: 0,
         left: 0,
-        display: "flex",
-        "align-items": "center",
-        "pointer-events": "none",
+        display: 'flex',
+        'align-items': 'center',
+        'pointer-events': 'none',
       },
-      "#queue_navigation > ul": {
+      '#queue_navigation > ul': {
         margin: 0,
         padding: 0,
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        "align-items": "center",
-        "justify-content": "space-between",
-        "list-style": "none",
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        'align-items': 'center',
+        'justify-content': 'space-between',
+        'list-style': 'none',
       },
-      "#queue_navigation > ul > li": {
-        padding: "15px 5px",
+      '#queue_navigation > ul > li': {
+        padding: '15px 5px',
         margin: 0,
-        display: "flex",
-        "justify-content": "center",
-        position: "relative",
-        "pointer-events": "all",
-        height: "100%",
-        "align-items": "center",
+        display: 'flex',
+        'justify-content': 'center',
+        position: 'relative',
+        'pointer-events': 'all',
+        height: '100%',
+        'align-items': 'center',
       },
-      "#queue_navigation > ul > li.prev": {
-        left: "-10px",
+      '#queue_navigation > ul > li.prev': {
+        left: '-10px',
       },
-      "#queue_navigation > ul > li.next": {
-        right: "-10px",
+      '#queue_navigation > ul > li.next': {
+        right: '-10px',
       },
-      "#queue_navigation > ul > li > a": {
-        background: "rgba(255, 255, 255, 0.25)",
-        transition: "background-color 1s ease, opacity 1s ease",
-        "pointer-events": "none",
+      '#queue_navigation > ul > li > a': {
+        background: 'rgba(255, 255, 255, 0.25)',
+        transition: 'background-color 1s ease, opacity 1s ease',
+        'pointer-events': 'none',
         opacity: 0,
       },
-      "#queue_navigation > ul > li:hover > a": {
-        "pointer-events": "all",
+      '#queue_navigation > ul > li:hover > a': {
+        'pointer-events': 'all',
         opacity: 1,
       },
-      "#queue_navigation > ul > li > a:hover": {
-        background: "rgba(255, 255, 255, 0.75)",
+      '#queue_navigation > ul > li > a:hover': {
+        background: 'rgba(255, 255, 255, 0.75)',
       },
-      "#queue_navigation > ul > li > a > svg": {
-        "font-size": "3em",
+      '#queue_navigation > ul > li > a > svg': {
+        'font-size': '3em',
       },
-      "#queue_navigation > ul > li > a:hover > svg": {
-        color: "black",
+      '#queue_navigation > ul > li > a:hover > svg': {
+        color: 'black',
       },
-      ".marker_highlight > a.with_playback:hover": {
+      '.marker_highlight > a.with_playback:hover': {
         opacity: 1,
       },
-      ".frame_hover": {},
-      ".frame_hover video.hidden": {
+      '.frame_hover': {},
+      '.frame_hover:hover': {
+        get background() {
+          return `rgba(255, 255, 255, 0.75) url('data:image/svg+xml;utf8,${ui.templates.icons.tag}') center / contain no-repeat`;
+        },
+      },
+      '.frame_hover video.hidden': {
         opacity: 0,
-        "pointer-events": "none",
+        'pointer-events': 'none',
       },
     },
   };
 
   function waitForElm(selector) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (document.querySelector(selector)) {
         return resolve(document.querySelector(selector));
       }
 
-      const observer = new MutationObserver((mutations) => {
+      const observer = new MutationObserver(_mutations => {
         if (document.querySelector(selector)) {
           resolve(document.querySelector(selector));
           observer.disconnect();
@@ -288,18 +297,18 @@
   }
 
   function buildStyles(styles) {
-    let cssString = "";
+    let cssString = '';
     for (const selector in styles) {
-      cssString += selector + " { ";
+      cssString += selector + ' { ';
       for (const property in styles[selector]) {
         if ($.isPlainObject(styles[selector][property])) {
           cssString +=
-            property + ": " + buildStyles(styles[selector][property]);
+            property + ': ' + buildStyles(styles[selector][property]);
         } else {
-          cssString += property + ": " + styles[selector][property] + "; ";
+          cssString += property + ': ' + styles[selector][property] + '; ';
         }
       }
-      cssString += "} ";
+      cssString += '} ';
     }
     return cssString;
   }
@@ -313,6 +322,19 @@
     var scenario = result[1];
     var scenario_id = result[2];
     return [scenario, scenario_id];
+  }
+
+  /**
+   * Retrieves the base URL of the current page.
+   * @returns {string} The base URL of the current page.
+   */
+  function getBaseUrl() {
+    const { protocol, hostname, port } = window.location;
+    // Check if the port is present and not empty
+    const fullAddress = port
+      ? `${protocol}//${hostname}:${port}`
+      : `${protocol}//${hostname}`;
+    return fullAddress;
   }
 
   /**
@@ -331,8 +353,8 @@
         }
       }`,
     };
-    var result = await stash.callGQL(reqData);
-    return result.data.findScene.tags.map((p) => p.id);
+    var result = await csLib.callGQL(reqData);
+    return result.findScene.tags.map(p => p.id);
   }
 
   async function getSceneMarkers(scene_id) {
@@ -350,8 +372,8 @@
             }
           }`,
     };
-    let result = await stash.callGQL(reqData);
-    return result.data?.findScene?.scene_markers;
+    let result = await csLib.callGQL(reqData);
+    return result?.findScene?.scene_markers;
   }
 
   async function getSceneStream(scene_id) {
@@ -369,9 +391,9 @@
             }
           }`,
     };
-    let result = await stash.callGQL(reqData),
-      play_duration = result.data?.findScene?.play_duration,
-      stream = result.data?.findScene?.paths?.stream;
+    let result = await csLib.callGQL(reqData),
+      play_duration = result?.findScene?.play_duration,
+      stream = result?.findScene?.paths?.stream;
     return { stream, duration: play_duration };
   }
 
@@ -390,7 +412,7 @@
         }
       }`,
     };
-    return stash.callGQL(reqData);
+    return csLib.callGQL(reqData);
   }
 
   /**
@@ -405,11 +427,11 @@
     scene_id,
     primary_tag_id,
     seconds,
-    tagName = null
+    tagName = null,
   ) {
     const reqData = {
       variables: {
-        title: tagName ? tagName : "",
+        title: tagName ? tagName : '',
         scene_id: scene_id,
         primary_tag_id: primary_tag_id,
         seconds: seconds,
@@ -420,8 +442,8 @@
         }
       }`,
     };
-    let result = await stash.callGQL(reqData);
-    return result.data.sceneMarkerCreate.id;
+    let result = await csLib.callGQL(reqData);
+    return result.sceneMarkerCreate.id;
   }
 
   async function generateMarkers() {
@@ -446,7 +468,7 @@
           metadataGenerate(input: $input)
         }`,
     };
-    return stash.callGQL(reqData);
+    return csLib.callGQL(reqData);
   }
 
   async function addMarker(tagId, time, tagName = null) {
@@ -472,7 +494,7 @@
    * Retrieves all tags from the server and returns them as an object with tag names as keys and tag IDs as values.
    * @returns {Promise<Object>} An object with tag names as keys and tag IDs as values.
    */
-  async function getAllTags(keys = "name") {
+  async function getAllTags(keys = 'name') {
     const reqData = {
       query: `{
         allTags{
@@ -482,22 +504,22 @@
         }
       }`,
     };
-    var result = await stash.callGQL(reqData);
-    if (keys === "name") {
-      return result.data.allTags.reduce((map, obj) => {
+    var result = await csLib.callGQL(reqData);
+    if (keys === 'name') {
+      return result.allTags.reduce((map, obj) => {
         map[obj.name.toLowerCase()] = obj.id;
-        obj.aliases.forEach((alias) => {
+        obj.aliases.forEach(alias => {
           map[alias.toLowerCase()] = obj.id;
         });
         return map;
       }, {});
     } else {
-      return result.data.allTags.reduce((map, obj) => {
+      return result.allTags.reduce((map, obj) => {
         if (!map[obj.id]) {
           map[obj.id] = {
             id: obj.id,
             name: obj.name.toLowerCase(),
-            aliases: obj.aliases.map((alias) => {
+            aliases: obj.aliases.map(alias => {
               return alias.toLowerCase();
             }),
           };
@@ -508,7 +530,7 @@
   }
 
   async function getLatestTags() {
-    return getAllTags("id").then(async (tags) => {
+    return getAllTags('id').then(async tags => {
       const reqData = {
         query: `mutation {
               querySQL(sql: "SELECT id, primary_tag_id FROM scene_markers ORDER BY created_at DESC", args: []) {
@@ -516,8 +538,8 @@
               }
             }`,
       };
-      var result = await stash.callGQL(reqData),
-        marker_tag_ids = result.data.querySQL.rows.reduce((map, arr) => {
+      var result = await csLib.callGQL(reqData),
+        marker_tag_ids = result.querySQL.rows.reduce((map, arr) => {
           if (map.indexOf(arr[1]) === -1) {
             map.push(arr[1]);
           }
@@ -528,10 +550,10 @@
         .concat(
           Object.keys(tags)
             .map(Number)
-            .filter((tag_id) => marker_tag_ids.indexOf(tag_id) === -1)
+            .filter(tag_id => marker_tag_ids.indexOf(tag_id) === -1),
         )
         .filter((tag_id, i, self) => i == self.indexOf(tag_id))
-        .map((tag_id) => tags[tag_id]);
+        .map(tag_id => tags[tag_id]);
     });
   }
 
@@ -551,42 +573,43 @@
           }
         }`,
     };
-    var result = await stash.callGQL(reqData);
-    const url = result.data.findScene.paths["sprite"];
+    var result = await csLib.callGQL(reqData);
+    const url = result.findScene.paths['sprite'];
     const response = await fetch(url);
     if (response.status === 404) {
       return null;
     } else {
-      return result.data.findScene.paths["sprite"];
+      return result.findScene.paths['sprite'];
     }
   }
 
   async function download(url) {
-    const vblob = await fetch(url).then((res) => res.blob());
+    const vblob = await fetch(url).then(res => res.blob());
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.readAsDataURL(vblob);
     });
   }
 
+  // eslint-disable-next-line no-unused-vars
   async function getFrameUrl(spriteSheet, vtt) {
     return new Promise((resolve, reject) => {
       // Validate the VTT object
       if (!vtt) {
-        reject(new Error("Invalid VTT object"));
+        reject(new Error('Invalid VTT object'));
         return;
       }
 
       // Create a canvas to crop the image
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = vtt.width;
       canvas.height = vtt.height;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
 
       if (!ctx) {
-        reject(new Error("Failed to create canvas context"));
+        reject(new Error('Failed to create canvas context'));
         return;
       }
 
@@ -600,11 +623,11 @@
         0,
         0,
         vtt.width,
-        vtt.height // Destination rectangle on canvas
+        vtt.height, // Destination rectangle on canvas
       );
 
       // Convert the canvas content to a Blob
-      canvas.toBlob((blob) => {
+      canvas.toBlob(blob => {
         if (blob) {
           // Create a Blob URL for the cropped image
           const blobUrl = URL.createObjectURL(blob);
@@ -615,7 +638,7 @@
 
           resolve(blobUrl);
         } else {
-          reject(new Error("Failed to create Blob from canvas"));
+          reject(new Error('Failed to create Blob from canvas'));
         }
       });
 
@@ -634,25 +657,25 @@
       bottom,
       width,
       height = null;
-    const lines = vtt.split("\n");
+    const lines = vtt.split('\n');
     const offsets = [];
 
     for (const line of lines) {
       const trimmedLine = line.trim();
 
-      if (trimmedLine.includes("-->")) {
-        const start = trimmedLine.split("-->")[0].trim().split(":");
+      if (trimmedLine.includes('-->')) {
+        const start = trimmedLine.split('-->')[0].trim().split(':');
         time_seconds =
           parseInt(start[0]) * 3600 +
           parseInt(start[1]) * 60 +
           parseFloat(start[2]);
         left = top = right = bottom = width = height = null;
-      } else if (trimmedLine.includes("xywh=")) {
+      } else if (trimmedLine.includes('xywh=')) {
         [left, top, width, height] = trimmedLine
-          .split("xywh=")[1]
-          .split(",")
+          .split('xywh=')[1]
+          .split(',')
           .map(Number)
-          .map((n) => n * scaleFactor);
+          .map(n => n * scaleFactor);
         right = left + width;
         bottom = top + height;
       } else {
@@ -668,7 +691,7 @@
   }
 
   function getVTTFrames(vtt, scaleFactor = 1) {
-    const decodedVtt = atob(vtt.replace("data:text/vtt;base64,", ""));
+    const decodedVtt = atob(vtt.replace('data:text/vtt;base64,', ''));
     const offsets = getVTToffsets(decodedVtt, scaleFactor);
     const frames = offsets.map((offset, index) => ({
       index,
@@ -704,21 +727,21 @@
     const seconds = Math.round(totalSeconds % 60, 2);
 
     // Format each component to be two digits
-    const formattedHours = String(hours).padStart(2, "0");
-    const formattedMinutes = String(minutes).padStart(2, "0");
-    const formattedSeconds = String(seconds).padStart(2, "0");
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
 
     // Construct the formatted time string
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
 
   function getSceneDuration(vtt) {
-    const decodedVtt = atob(vtt.replace("data:text/vtt;base64,", ""));
-    const lines = decodedVtt.split("\n");
+    const decodedVtt = atob(vtt.replace('data:text/vtt;base64,', ''));
+    const lines = decodedVtt.split('\n');
     const duration_hms = lines[lines.length - 3]
-      .split("-->")[1]
+      .split('-->')[1]
       .trim()
-      .split(":");
+      .split(':');
     if (duration_hms && Array.isArray(duration_hms)) {
       const duration_s =
         parseInt(duration_hms[0]) * 3600 +
@@ -729,14 +752,15 @@
     return -1;
   }
 
+  // eslint-disable-next-line no-unused-vars
   function onKeyPressSave() {
-    let btnGrp = "#scene-edit-details .edit-buttons";
-    waitForElm(btnGrp).then(async ($el) => {
-      const $btn = $el.querySelector(".btn-primary");
+    let btnGrp = '#scene-edit-details .edit-buttons';
+    waitForElm(btnGrp).then(async $el => {
+      const $btn = $el.querySelector('.btn-primary');
       if ($btn) {
-        document.addEventListener("keydown", function (event) {
+        document.addEventListener('keydown', function (event) {
           // Check if 'S' is pressed along with Ctrl or Cmd
-          if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+          if ((event.ctrlKey || event.metaKey) && event.key === 's') {
             event.preventDefault(); // Prevent the default save action
             // Trigger your specific button event
             $btn.click();
@@ -748,7 +772,6 @@
 
   function bgImageSize(container, url, callback) {
     const divRect = container.getBoundingClientRect();
-    const inset = 10;
     const divWidth = divRect.width;
     const divHeight = divRect.height;
     const divAspectRatio = divWidth / divHeight;
@@ -784,7 +807,7 @@
         scale: scaleFactor,
       };
 
-      if (typeof callback == "function") {
+      if (typeof callback == 'function') {
         callback({ img, spritePos: result });
       }
     };
@@ -798,54 +821,53 @@
       $toast = $(`${top}${message}${bottom}`),
       rmToast = () => $toast.remove();
 
-    $toast.find("button.close").click(rmToast);
-    $(".toast-container").append($toast);
+    $toast.find('button.close').click(rmToast);
+    $('.toast-container').append($toast);
     setTimeout(rmToast, 3000);
   }
 
   function close_modal() {
-    $(".tagger-tabs").remove();
+    $('.tagger-tabs').remove();
   }
 
   function onClearQuery(e) {
     e.preventDefault();
-    $(e.currentTarget).addClass("d-none");
-    $("#stashtag-search").val("");
-    $("#stashtag-search").focus();
-    $("#stashtag-search").trigger("input");
+    $(e.currentTarget).addClass('d-none');
+    $('#stashtag-search').val('');
+    $('#stashtag-search').focus();
+    $('#stashtag-search').trigger('input');
   }
 
   function displayModal(frame) {
-    const offset = ((o) => {
+    const offset = (o => {
         const { left, top, width, height } = o;
         return [left, top, width, height];
       })(frame.unscaled),
       template = ui.templates.modals.result,
       marker_time = formatDuration(frame.time);
-    let card = ui.templates.cards.tag,
-      html = template.top + template.bottom;
+    let html = template.top + template.bottom;
 
-    html = html.replace("[vtt_offset]", offset.join(","));
-    html = html.replace("[bg_offset]", `-${offset[0]}px -${offset[1]}px`);
-    html = html.replace("[bg_width]", offset[2]);
-    html = html.replace("[bg_height]", offset[3]);
-    html = html.replace("[sprite_url]", frame.spriteUrl);
-    html = html.replace("[marker_time]", marker_time);
+    html = html.replace('[vtt_offset]', offset.join(','));
+    html = html.replace('[bg_offset]', `-${offset[0]}px -${offset[1]}px`);
+    html = html.replace('[bg_width]', offset[2]);
+    html = html.replace('[bg_height]', offset[3]);
+    html = html.replace('[sprite_url]', frame.spriteUrl);
+    html = html.replace('[marker_time]', marker_time);
 
-    $(".main > .row").append(html);
+    $('.main > .row').append(html);
 
-    $("#tags-cancel").click(function () {
+    $('#tags-cancel').click(function () {
       close_modal();
     });
 
-    $(".stashtag-search .query-text-field-clear").click(onClearQuery);
+    $('.stashtag-search .query-text-field-clear').click(onClearQuery);
 
-    $("#stashtag-results").on("click", ".tag-card a", function (e) {
-      const tag_id = $(e.currentTarget).closest(".tag-card").data("tag_id"),
+    $('#stashtag-results').on('click', '.tag-card a', function (e) {
+      const tag_id = $(e.currentTarget).closest('.tag-card').data('tag_id'),
         tag_name = $(e.currentTarget)
-          .closest(".tag-card")
-          .data("tag_name")
-          .replace(/\b\w/g, (a) => a.toUpperCase());
+          .closest('.tag-card')
+          .data('tag_name')
+          .replace(/\b\w/g, a => a.toUpperCase());
       addTags([tag_id]);
       addMarker(tag_id, frame.time, tag_name).then(() => {
         annotateSprite(frame.spriteUrl);
@@ -855,35 +877,36 @@
       close_modal();
     });
 
-    getLatestTags().then((tags) => {
+    getLatestTags().then(tags => {
       updateSearch(tags.slice(0, NUMBER_OF_TAGS));
 
-      $("#stashtag-search").on("input", function () {
+      $('#stashtag-search').on('input', function () {
         const searchVal = $(this).val().toLowerCase(),
-          $clearBtn = $(".stashtag-search .query-text-field-clear"),
+          $clearBtn = $('.stashtag-search .query-text-field-clear'),
           filteredTags = tags.filter(function (tag) {
             return tag.name.toLowerCase().includes(searchVal);
           });
-        $clearBtn.toggleClass("d-none", !searchVal);
+        $clearBtn.toggleClass('d-none', !searchVal);
         updateSearch(filteredTags.slice(0, NUMBER_OF_TAGS));
       });
     });
   }
 
   function updateSearch(filtered) {
-    const $results = $("#stashtag-results");
+    const $results = $('#stashtag-results');
     $results.empty();
 
     filtered.forEach(function (tag) {
       var card = ui.templates.cards.tag,
         ts = Date.now();
-      card = card.replace("[tag_id]", tag.id);
-      card = card.replace("[timestamp]", ts);
-      card = card.replace("[tag_name]", tag.name);
+      card = card.replace('[base_url]', getBaseUrl());
+      card = card.replace('[tag_id]', tag.id);
+      card = card.replace('[timestamp]', ts);
+      card = card.replace('[tag_name]', tag.name);
 
       var $card = $(card);
-      $card.data("tag_id", tag.id);
-      $card.data("tag_name", tag.name);
+      $card.data('tag_id', tag.id);
+      $card.data('tag_name', tag.name);
       $results.append($card);
     });
   }
@@ -891,73 +914,74 @@
   async function annotateSprite(spriteUrl) {
     const [_, scene_id] = getScenarioAndID();
     const sceneMarkers = await getSceneMarkers(scene_id);
-    const screenCaps = document.querySelector("#screencaps");
-    const link = document.querySelector("#spritemap");
+    const screenCaps = document.querySelector('#screencaps');
+    const link = document.querySelector('#spritemap');
     let icon_marker = ui.templates.icons.marker_md,
       icon_play = ui.templates.icons.play,
+      icon_pause = ui.templates.icons.pause,
       icon_mark = ui.templates.icons.marker_sm,
-      vtt_url = spriteUrl.replace("_sprite.jpg", "_thumbs.vtt"),
+      vtt_url = spriteUrl.replace('_sprite.jpg', '_thumbs.vtt'),
       vtt = await download(vtt_url),
       streamData = await getSceneStream(scene_id),
       streamURL,
-      streamDuration,
-      frameUrl,
+      _streamDuration,
       $markerEl,
       marker,
       $highlight,
       $preview,
       $spinner,
       f,
-      n,
       i,
+      _n,
       timeIndex,
       off;
     if (streamData) {
       streamURL = streamData.stream;
-      streamDuration = streamData.duration;
+      _streamDuration = streamData.duration;
     }
     SCENE_VTT = vtt;
-    link.innerHTML = "";
+    link.innerHTML = '';
+    // eslint-disable-next-line no-unused-vars
     return bgImageSize(screenCaps, spriteUrl, async ({ img, spritePos }) => {
       const frameData = getVTTFrames(vtt, spritePos.scale),
         { x, y } = spritePos.position,
         { width: w, height: h } = spritePos.size,
-        $queue_control = $(".queue-controls"),
-        $queue_content = $("#queue-content"),
+        $queue_control = $('.queue-controls'),
+        $queue_content = $('#queue-content'),
         $hl = $(`<ul></ul>`),
         $hlParent = $(
-          `<div id="caps-highlight-container" style="left: ${x}px; top: ${y}px; width: ${w}px; height: ${h}px;"></div>`
+          `<div id="caps-highlight-container" style="left: ${x}px; top: ${y}px; width: ${w}px; height: ${h}px;"></div>`,
         ),
         $navParent = $(`<div id="queue_navigation"></div>`),
         $nav = $(`<ul></ul>`),
         $prev = $(
-          `<li class="prev"><a title="Prev Scene">${ui.templates.icons.prev}</a></li>`
+          `<li class="prev"><a title="Prev Scene">${ui.templates.icons.prev}</a></li>`,
         ),
         $next = $(
-          `<li class="next"><a title="Next Scene">${ui.templates.icons.next}</a></li>`
+          `<li class="next"><a title="Next Scene">${ui.templates.icons.next}</a></li>`,
         );
 
-      $prev.click((e) => {
+      $prev.click(e => {
         e.preventDefault();
         e.stopPropagation();
-        const $psvg = $queue_control.find(".btn svg.fa-backward-step"),
-          $usvg = $queue_content.find(".btn-primary svg.fa-chevron-up");
+        const $psvg = $queue_control.find('.btn svg.fa-backward-step'),
+          $usvg = $queue_content.find('.btn-primary svg.fa-chevron-up');
         if ($psvg.length) {
-          $psvg.closest(".btn").click();
+          $psvg.closest('.btn').click();
         } else if ($usvg.length) {
-          $usvg.closest(".btn").click();
+          $usvg.closest('.btn').click();
           setTimeout(() => $prev.click(), 2000);
         }
       });
-      $next.click((e) => {
+      $next.click(e => {
         e.preventDefault();
         e.stopPropagation();
-        const $nsvg = $queue_control.find(".btn svg.fa-forward-step"),
-          $dsvg = $queue_content.find(".btn-primary svg.fa-chevron-down");
+        const $nsvg = $queue_control.find('.btn svg.fa-forward-step'),
+          $dsvg = $queue_content.find('.btn-primary svg.fa-chevron-down');
         if ($nsvg.length) {
-          $nsvg.closest(".btn").click();
+          $nsvg.closest('.btn').click();
         } else if ($dsvg.length) {
-          $dsvg.closest(".btn").click();
+          $dsvg.closest('.btn').click();
           setTimeout(() => $next.click(), 2000);
         }
       });
@@ -968,7 +992,7 @@
 
       for (i = 0; i < frameData.length; i++) {
         f = frameData[i];
-        n = i + 1 < frameData.length ? frameData[i + 1] : null;
+        _n = i + 1 < frameData.length ? frameData[i + 1] : null;
         timeIndex = formatDuration(f.time);
         $highlight = $(
           `<li
@@ -978,12 +1002,13 @@
             >
             <div class="frame_actions">
               <a class="play_index" title="Play from ${timeIndex}">${icon_play}</a>
+              <a class="pause_index" title="Pause at ${timeIndex}">${icon_pause}</a>
               <a class="mark_index" style="display: none" title="Add marker at ${timeIndex}">${icon_mark}</a>
             </div>
             <a class="frame_hover" title="Add marker at ${timeIndex}"></a>
-            </li>`
+            </li>`,
         );
-        $highlight.data("frame", { ...f, spriteUrl });
+        $highlight.data('frame', { ...f, spriteUrl });
         $hl.append($highlight);
       }
       $hlParent.append($hl);
@@ -997,8 +1022,8 @@
           }, null);
           if (f) {
             timeIndex = formatDuration(f.time);
-            off = ["left", "top", "right", "bottom"].reduce((o, k) => {
-              if (["left", "right"].includes(k)) {
+            off = ['left', 'top', 'right', 'bottom'].reduce((o, k) => {
+              if (['left', 'right'].includes(k)) {
                 o[k] += x;
               } else {
                 o[k] += y;
@@ -1010,70 +1035,82 @@
                   <a class="marker_preview" title="Play from ${timeIndex}">
                     ${icon_marker}
                   </a>
-                </div>`
+                </div>`,
             );
             link.appendChild($markerEl.get(0));
-            $("#spritemap").find(`#frame_${f.index} .frame_actions`).hide();
-            $("#spritemap")
+            $('#spritemap').find(`#frame_${f.index} .frame_actions`).hide();
+            $('#spritemap')
               .find(`#frame_${f.index} .frame_hover`)
-              .addClass("with_marker");
+              .addClass('with_marker');
           }
         }
-        $preview = $("#spritemap").find(".frame_hover");
+        $preview = $('#spritemap').find('.frame_hover');
         $spinner = $('<div class="loader"></div>');
-        $preview.hover(
-          function () {
-            var $this = $(this);
-            if ($this.find("video").length === 0) {
-              $this.closest(".marker_highlight").append($spinner);
-              $highlight = $this.closest(".marker_highlight");
-              f = $highlight.data("frame");
-              var $video = $(
-                `<video 
-                  disableremoteplayback="" 
-                  playsinline="" 
-                  src="${streamURL}#t=${f.time},${f.time + 60}" 
-                  preload="auto"
-                  autoplay="" loop="" 
-                  class="wall-item-media hidden"
-                  ></video>`
-              );
-              $video.on("loadeddata", function () {
-                $(this).closest(".marker_highlight").find(".loader").remove();
-              });
-              setTimeout(function () {
-                $this.closest(".marker_highlight").find(".loader").remove();
-              }, 10000);
-              $this
-                .append($video)
-                .addClass("with_playback")
-                .find("video")
-                .removeClass("hidden")
-                .get(0)
-                .play();
-            } else {
-              $(this).find("video").removeClass("hidden").get(0).play();
-            }
-          },
-          function () {
-            $(this).find("video").addClass("hidden").get(0).pause();
-          }
-        );
+        $preview.each(function () {
+          var hoverTimer;
+
+          $(this).hover(
+            function () {
+              var $this = $(this);
+              hoverTimer = setTimeout(function () {
+                if ($this.find('video').length === 0) {
+                  $this.closest('.marker_highlight').append($spinner);
+                  $highlight = $this.closest('.marker_highlight');
+                  f = $highlight.data('frame');
+                  var $video = $(
+                    `<video 
+                        disableremoteplayback="" 
+                        playsinline="" 
+                        src="${streamURL}#t=${f.time},${f.time + 60}" 
+                        preload="auto"
+                        autoplay="" loop="" 
+                        class="wall-item-media hidden"
+                    ></video>`,
+                  );
+                  $video.on('loadeddata', function () {
+                    $(this)
+                      .closest('.marker_highlight')
+                      .find('.loader')
+                      .remove();
+                  });
+                  setTimeout(function () {
+                    $this.closest('.marker_highlight').find('.loader').remove();
+                  }, 10000);
+                  $this
+                    .append($video)
+                    .addClass('with_playback')
+                    .find('video')
+                    .removeClass('hidden')
+                    .get(0)
+                    .play();
+                } else {
+                  $this.find('video').removeClass('hidden').get(0).play();
+                }
+              }, 1000); // Set a delay of 1000ms before executing the hover function
+            },
+            function () {
+              clearTimeout(hoverTimer); // Clear the timer if the mouse leaves before 1 second
+              if ($(this).find('video').length > 0) {
+                $(this).find('video').addClass('hidden').get(0).pause();
+              }
+            },
+          );
+        });
       }
       return frameData;
     });
   }
 
   function playerSeek(time, play) {
-    const video = document.getElementById("VideoJsPlayer");
-    const screenCaps = document.querySelector("#screencaps");
+    const video = document.getElementById('VideoJsPlayer');
+    const screenCaps = document.querySelector('#screencaps');
     let duration = -1;
-    play = typeof play === "undefined" ? true : play;
+    play = typeof play === 'undefined' ? true : play;
     if (video) {
       const player = video.player;
       if (player) {
-        if (screenCaps.style.display !== "none") {
-          screenCaps.style.display = "none";
+        if (screenCaps.style.display !== 'none') {
+          screenCaps.style.display = 'none';
         }
 
         // Adjust for player time dilation.
@@ -1097,96 +1134,97 @@
 
   const onSpriteClick = function (e) {
     const t = e.target,
-      frame = $(t).closest(".marker_highlight").data("frame"),
-      modalOpen = !!$(".main > .row").find(".tagger-tabs > .modal-dialog")
+      frame = $(t).closest('.marker_highlight').data('frame'),
+      modalOpen = !!$('.main > .row').find('.tagger-tabs > .modal-dialog')
         .length;
-    if ($(t).is(".play_index, .with_marker")) {
+    if ($(t).is('.play_index, .with_marker')) {
+      playerSeek(frame.time, true);
+    } else if ($(t).is('.pause_index, .with_marker')) {
       playerSeek(frame.time, false);
     } else if (!modalOpen) {
       displayModal(frame);
     }
   };
 
-  function init() {
-    let btnGrp = ".scene-toolbar-group:nth-child(2)";
-    let wrapper = ".VideoPlayer .video-wrapper";
+  function initSceneCaps(element) {
+    $(function () {
+      $(window).resize(() => setupSceneCaps(element));
+    });
+    setupSceneCaps(element);
+  }
+
+  async function setupSceneCaps(element) {
+    const $el = $(element);
+    let btnGrp = '.scene-toolbar-group:nth-child(2)';
     SCENE_VTT = null; // Reset VTT
 
     $(function () {
-      if (!document.querySelector("#screencaps-styles")) {
+      if (!document.querySelector('#screencaps-styles')) {
         let css = buildStyles(ui.styles);
-        $('<style id="screencaps-styles"></style>').text(css).appendTo("head");
+        $('<style id="screencaps-styles"></style>').text(css).appendTo('head');
       }
     });
 
-    waitForElm(wrapper).then(async ($el) => {
-      const [_, scene_id] = getScenarioAndID();
-      const spriteUrl = await getUrlSprite(scene_id);
+    const [_, scene_id] = getScenarioAndID();
+    const spriteUrl = await getUrlSprite(scene_id);
 
-      if (spriteUrl) {
-        if (!document.querySelector("#screencaps")) {
-          const screenCaps = document.createElement("div");
-          const link = document.createElement("a");
+    if (spriteUrl) {
+      if (!document.querySelector('#screencaps')) {
+        const screenCaps = document.createElement('div');
+        const link = document.createElement('a');
 
-          screenCaps.setAttribute("id", "screencaps");
-          screenCaps.setAttribute(
-            "style",
-            `background: url(${spriteUrl}) no-repeat center center/contain; display: none;`
-          );
-          link.setAttribute("id", "spritemap");
-          link.addEventListener("click", onSpriteClick);
-          screenCaps.appendChild(link);
-          $el.prepend(screenCaps);
-          waitForElm(btnGrp).then(async ($btnGrpEl) => {
-            if (!document.querySelector("#scenecaps")) {
-              const btn = document.createElement("button");
-              const spn = document.createElement("span");
-              btn.setAttribute("id", "scenecaps");
-              btn.setAttribute("class", "minimal btn btn-secondary");
-              btn.setAttribute("title", "Display Contact Sheet");
-              const svg = ui.templates.icons.clapper;
-              btn.innerHTML = svg;
-              spn.appendChild(btn);
-              $btnGrpEl.prepend(spn);
-              btn.addEventListener("click", function () {
-                if (screenCaps.style.display === "none") {
-                  const [_, scene_id] = getScenarioAndID();
-                  getUrlSprite(scene_id).then((spriteUrl) => {
-                    screenCaps.style.display = "block";
-                    annotateSprite(spriteUrl);
-                  });
-                } else {
-                  screenCaps.style.display = "none";
-                }
-              });
-            }
-          });
-        } else {
-          const screenCaps = document.querySelector("#screencaps");
-          const link = document.querySelector("#spritemap");
-          screenCaps.style.backgroundImage = "url(" + spriteUrl + ")";
-          link.removeEventListener("click", onSpriteClick);
-          link.addEventListener("click", onSpriteClick);
-          annotateSprite(spriteUrl);
-        }
+        screenCaps.setAttribute('id', 'screencaps');
+        screenCaps.setAttribute(
+          'style',
+          `background: url(${spriteUrl}) no-repeat center center/contain; display: none;`,
+        );
+        link.setAttribute('id', 'spritemap');
+        link.addEventListener('click', onSpriteClick);
+        screenCaps.appendChild(link);
+        $el.prepend(screenCaps);
+        waitForElm(btnGrp).then(async $btnGrpEl => {
+          if (!document.querySelector('#scenecaps')) {
+            const btn = document.createElement('button');
+            const spn = document.createElement('span');
+            btn.setAttribute('id', 'scenecaps');
+            btn.setAttribute('class', 'minimal btn btn-secondary');
+            btn.setAttribute('title', 'Display Contact Sheet');
+            const svg = ui.templates.icons.clapper;
+            btn.innerHTML = svg;
+            spn.appendChild(btn);
+            $btnGrpEl.prepend(spn);
+            btn.addEventListener('click', function () {
+              if (screenCaps.style.display === 'none') {
+                const [_, scene_id] = getScenarioAndID();
+                getUrlSprite(scene_id).then(spriteUrl => {
+                  screenCaps.style.display = 'block';
+                  annotateSprite(spriteUrl);
+                });
+              } else {
+                screenCaps.style.display = 'none';
+              }
+            });
+          }
+        });
       } else {
-        const screenCaps = document.querySelector("#screencaps");
-        const btn = document.querySelector("#scenecaps");
-        if (screenCaps) {
-          screenCaps.remove();
-        }
-        if (btn && btn.parentElement.tagName == "span") {
-          btn.parentElement.remove();
-        }
+        const screenCaps = document.querySelector('#screencaps');
+        const link = document.querySelector('#spritemap');
+        screenCaps.style.backgroundImage = 'url(' + spriteUrl + ')';
+        link.removeEventListener('click', onSpriteClick);
+        link.addEventListener('click', onSpriteClick);
+        annotateSprite(spriteUrl);
       }
-    });
+    } else {
+      const screenCaps = document.querySelector('#screencaps');
+      const btn = document.querySelector('#scenecaps');
+      if (screenCaps) {
+        screenCaps.remove();
+      }
+      if (btn && btn.parentElement.tagName == 'span') {
+        btn.parentElement.remove();
+      }
+    }
   }
 
-  stash.addEventListener("stash:page:scene", init);
-  stash.addEventListener("stash:page:scene", onKeyPressSave);
-  stash.addEventListener("stash:page:image", onKeyPressSave);
-
-  $(function () {
-    $(window).resize(init);
-  });
+  csLib.PathElementListener('/scenes/', TARGET_SELECTOR, initSceneCaps);
 })();
