@@ -61,3 +61,5 @@ Once installed, A new icon will show on a scene's page next to the organized but
 - v0.3.0 Add on-demand video preview playback to sprite hover.
 
 - v0.3.1 Add spinner to preview video; localize StashUserscriptLibrary.js.
+
+- v1.0.0 Replace StashUserscriptLibrary.js with CommunityScriptsUILibrary.
